@@ -54,7 +54,7 @@ export const organization = pgTable("organization", {
   slug: text("slug").unique(),
   logo: text("logo"),
   createdAt: timestamp("createdAt").notNull(),
-  metadata: text("metadata"), // Plugin might use this
+  metadata: text("metadata"), 
 });
 
 export const member = pgTable("member", {
@@ -76,4 +76,25 @@ export const invitation = pgTable("invitation", {
 });
 
 // --- Business Tables ---
-// (We will add Project and Task tables later, linked to 'organization')
+
+export const projects = pgTable("project", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  organizationId: text("organizationId").notNull().references(() => organization.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
+});
+
+export const tasks = pgTable("task", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").notNull(), // 'TODO', 'IN_PROGRESS', 'DONE', etc.
+  position: integer("position").notNull().default(0),
+  projectId: text("projectId").notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  organizationId: text("organizationId").notNull().references(() => organization.id, { onDelete: 'cascade' }),
+  assigneeId: text("assigneeId").references(() => user.id),
+  dueDate: timestamp("dueDate"),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
+});

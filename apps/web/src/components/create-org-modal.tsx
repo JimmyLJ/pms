@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,22 +19,24 @@ export function CreateOrganizationModal({ children }: { children: React.ReactNod
   const [slug, setSlug] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleCreate = async () => {
     if (!name || !slug) return;
     setLoading(true);
-    const { error } = await authClient.organization.create({
+    const { data, error } = await authClient.organization.create({
       name,
       slug,
     });
     setLoading(false);
     if (error) {
       alert(error.message);
-    } else {
+    } else if (data) {
       setOpen(false);
       setName("");
       setSlug("");
-      // Better-Auth 会自动更新 session 中的 activeOrganization
+      await authClient.organization.setActive({ organizationId: data.id });
+      navigate(`/w/${data.id}`);
     }
   };
 
