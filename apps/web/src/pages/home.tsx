@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
 import { useNavigate } from "react-router-dom"
@@ -5,10 +6,17 @@ import { CreateOrganizationModal } from "@/components/create-org-modal"
 
 export default function HomePage() {
   const { data: session, isPending } = authClient.useSession()
-  const { data: organizations } = authClient.organization.list()
+  const { data: organizations, isPending: isOrgsPending } = authClient.organization.list()
   const navigate = useNavigate()
 
-  if (isPending) return <div className="p-10 text-center">Loading...</div>
+  useEffect(() => {
+    // 如果有 session 且已经有激活的组织，则自动跳转
+    if (!isPending && session?.session.activeOrganizationId) {
+      navigate(`/w/${session.session.activeOrganizationId}`)
+    }
+  }, [session, isPending, navigate])
+
+  if (isPending || isOrgsPending) return <div className="p-10 text-center">Loading...</div>
 
   return (
     <div className="p-10 max-w-4xl mx-auto">
