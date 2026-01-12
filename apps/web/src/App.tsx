@@ -1,9 +1,12 @@
-function App() {
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import HomePage from "./pages/home"
+
+export default function App() {
   return (
-    <div>
-      <h1>PMS Frontend (React 19)</h1>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
-
-export default App
