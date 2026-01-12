@@ -2,7 +2,7 @@ import { pgTable, text, timestamp, boolean, integer, uuid } from "drizzle-orm/pg
 
 // --- Auth Tables (Better-Auth Standard) ---
 
-export const users = pgTable("user", {
+export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -12,51 +12,68 @@ export const users = pgTable("user", {
   updatedAt: timestamp("updatedAt").notNull(),
 });
 
-export const sessions = pgTable("session", {
+export const session = pgTable("session", {
   id: text("id").primaryKey(),
   expiresAt: timestamp("expiresAt").notNull(),
+  token: text("token").notNull().unique(),
   ipAddress: text("ipAddress"),
   userAgent: text("userAgent"),
-  userId: text("userId").notNull().references(() => users.id),
+  userId: text("userId").notNull().references(() => user.id),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
 });
 
-export const accounts = pgTable("account", {
+export const account = pgTable("account", {
   id: text("id").primaryKey(),
   accountId: text("accountId").notNull(),
   providerId: text("providerId").notNull(),
-  userId: text("userId").notNull().references(() => users.id),
+  userId: text("userId").notNull().references(() => user.id),
   accessToken: text("accessToken"),
   refreshToken: text("refreshToken"),
   idToken: text("idToken"),
   expiresAt: timestamp("expiresAt"),
   password: text("password"),
-});
-
-export const verifications = pgTable("verification", {
-  id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: timestamp("expiresAt").notNull(),
-});
-
-// --- Business Tables ---
-
-export const workspaces = pgTable("workspace", {
-  id: text("id").primaryKey(), // Better-Auth 插件通常生成文本 ID
-  name: text("name").notNull(),
-  slug: text("slug").unique(), // 用于 URL 访问，如 /org/my-company
-  logo: text("logo"),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
 });
 
-export const members = pgTable("member", {
+export const verification = pgTable("verification", {
   id: text("id").primaryKey(),
-  workspaceId: text("workspaceId").notNull().references(() => workspaces.id),
-  userId: text("userId").notNull().references(() => users.id),
-  role: text("role").notNull(), // 'admin', 'member'
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt"),
+  updatedAt: timestamp("updatedAt"),
+});
+
+// --- Organization Plugin Tables ---
+
+export const organization = pgTable("organization", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").unique(),
+  logo: text("logo"),
+  createdAt: timestamp("createdAt").notNull(),
+  metadata: text("metadata"), // Plugin might use this
+});
+
+export const member = pgTable("member", {
+  id: text("id").primaryKey(),
+  organizationId: text("organizationId").notNull().references(() => organization.id),
+  userId: text("userId").notNull().references(() => user.id),
+  role: text("role").notNull(), // 'admin', 'member', 'owner'
   createdAt: timestamp("createdAt").notNull(),
 });
 
-// Organization plugin might need invitation table, but let's start with basic core tables first.
-// The organization plugin will likely handle invitations internally or we will add it later.
+export const invitation = pgTable("invitation", {
+  id: text("id").primaryKey(),
+  organizationId: text("organizationId").notNull().references(() => organization.id),
+  email: text("email").notNull(),
+  role: text("role"),
+  status: text("status").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  inviterId: text("inviterId").notNull().references(() => user.id),
+});
+
+// --- Business Tables ---
+// (We will add Project and Task tables later, linked to 'organization')
