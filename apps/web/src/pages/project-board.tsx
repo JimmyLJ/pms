@@ -18,8 +18,11 @@ import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { apiFetch } from "@/lib/api-client";
 import { KanbanColumn } from "@/components/kanban/kanban-column";
 import { TaskCard } from "@/components/kanban/task-card";
+import { CreateTaskModal } from "@/components/kanban/create-task-modal";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const COLUMNS = [
   { id: "TODO", title: "To Do" },
@@ -30,6 +33,7 @@ const COLUMNS = [
 export default function ProjectBoardPage() {
   const { workspaceId, projectId } = useParams();
   const queryClient = useQueryClient();
+  // ... (rest of the sensors/state)
   const [tasks, setTasks] = useState<any[]>([]);
   const [activeTask, setActiveTask] = useState<any>(null);
 
@@ -110,50 +114,71 @@ export default function ProjectBoardPage() {
     if (!over) return;
 
     const activeTask = tasks.find(t => t.id === active.id);
-    if (activeTask) {
+    if (activeTask && (workspaceId && projectId)) {
       updateTaskMutation.mutate({
         taskId: activeTask.id,
         updates: {
           status: activeTask.status,
-          position: 0, // 简化版：这里以后可以算更精确的排序位置
+          position: 0, 
         },
       });
     }
   };
 
-  if (isLoading) return <div className="p-10">Loading Board...</div>;
-
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Project Board</h2>
-        <Button onClick={() => alert("Create Task Logic Next!")}>
-          <Plus className="mr-2 h-4 w-4" /> Add Task
-        </Button>
+    <div className="h-full flex flex-col space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <Link to={`/w/${workspaceId}/projects`}>
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <h2 className="text-2xl font-bold tracking-tight">Project Board</h2>
+        </div>
+        
+        {projectId && workspaceId && (
+          <CreateTaskModal projectId={projectId} workspaceId={workspaceId} />
+        )}
       </div>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={onDragStart}
-        onDragOver={onDragOver}
-        onDragEnd={onDragEnd}
-      >
-        <div className="flex gap-6 overflow-x-auto pb-4 flex-1">
-          {COLUMNS.map((col) => (
-            <KanbanColumn
-              key={col.id}
-              id={col.id}
-              title={col.title}
-              tasks={tasks.filter((t) => t.status === col.id)}
-            />
+      {isLoading ? (
+        <div className="flex gap-6 overflow-x-auto pb-4 flex-1 items-start">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-muted/50 p-4 rounded-lg w-80 shrink-0 space-y-4">
+              <Skeleton className="h-6 w-1/3" />
+              <div className="space-y-3">
+                <Skeleton className="h-[100px] w-full rounded-md" />
+                <Skeleton className="h-[80px] w-full rounded-md" />
+                <Skeleton className="h-[120px] w-full rounded-md" />
+              </div>
+            </div>
           ))}
         </div>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={onDragStart}
+          onDragOver={onDragOver}
+          onDragEnd={onDragEnd}
+        >
+          <div className="flex gap-6 overflow-x-auto pb-4 flex-1 items-start">
+            {COLUMNS.map((col) => (
+              <KanbanColumn
+                key={col.id}
+                id={col.id}
+                title={col.title}
+                tasks={tasks.filter((t) => t.status === col.id)}
+              />
+            ))}
+          </div>
 
-        <DragOverlay>
-          {activeTask ? <TaskCard task={activeTask} /> : null}
-        </DragOverlay>
-      </DndContext>
+          <DragOverlay>
+            {activeTask ? <TaskCard task={activeTask} /> : null}
+          </DragOverlay>
+        </DndContext>
+      )}
     </div>
   );
 }

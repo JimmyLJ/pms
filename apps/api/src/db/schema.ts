@@ -19,6 +19,7 @@ export const session = pgTable("session", {
   ipAddress: text("ipAddress"),
   userAgent: text("userAgent"),
   userId: text("userId").notNull().references(() => user.id),
+  activeOrganizationId: text("activeOrganizationId"),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
 });

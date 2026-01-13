@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
+import { toast } from "react-hot-toast";
 
 export function CreateOrganizationModal({ children }: { children: React.ReactNode }) {
   const [name, setName] = useState("");
@@ -30,8 +31,9 @@ export function CreateOrganizationModal({ children }: { children: React.ReactNod
     });
     setLoading(false);
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
     } else if (data) {
+      toast.success("Workspace created successfully!");
       setOpen(false);
       setName("");
       setSlug("");

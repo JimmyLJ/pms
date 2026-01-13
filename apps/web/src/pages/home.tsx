@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
 import { useNavigate } from "react-router-dom"
@@ -6,15 +7,39 @@ import { CreateOrganizationModal } from "@/components/create-org-modal"
 
 export default function HomePage() {
   const { data: session, isPending } = authClient.useSession()
-  const { data: organizations, isPending: isOrgsPending } = authClient.organization.list()
   const navigate = useNavigate()
 
+  const { data: organizations, isLoading: isOrgsPending } = useQuery({
+    queryKey: ["organizations"],
+    queryFn: () => authClient.organization.list().then((res) => res.data),
+    enabled: !!session // Only fetch if user is logged in
+  })
+
   useEffect(() => {
-    // 如果有 session 且已经有激活的组织，则自动跳转
-    if (!isPending && session?.session.activeOrganizationId) {
+    console.log("Home Effect Debug:", { 
+      isPending, 
+      isOrgsPending, 
+      hasSession: !!session, 
+      activeOrgId: session?.session?.activeOrganizationId,
+      orgsCount: organizations?.length 
+    });
+
+    if (isPending || isOrgsPending) return
+
+    // 1. 如果已有激活的组织，直接跳转
+    if (session?.session.activeOrganizationId) {
       navigate(`/w/${session.session.activeOrganizationId}`)
+      return
     }
-  }, [session, isPending, navigate])
+
+    // 2. 如果没有激活组织，但列表里有组织，自动激活第一个
+    if (session && organizations && organizations.length > 0) {
+      const firstOrg = organizations[0]
+      authClient.organization.setActive({ organizationId: firstOrg.id }).then(() => {
+        navigate(`/w/${firstOrg.id}`)
+      })
+    }
+  }, [session, organizations, isPending, isOrgsPending, navigate])
 
   if (isPending || isOrgsPending) return <div className="p-10 text-center">Loading...</div>
 

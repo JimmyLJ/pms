@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
@@ -23,8 +24,9 @@ export default function SignUpPage() {
     });
     setLoading(false);
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
     } else {
+      toast.success("Account created successfully!");
       navigate("/");
     }
   };

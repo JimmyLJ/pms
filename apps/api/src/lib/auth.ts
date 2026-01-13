@@ -20,7 +20,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true
   },
-  trustedOrigins: ["http://localhost:5173"],
+  trustedOrigins: ["http://localhost:5173", "http://127.0.0.1:5173"],
   plugins: [
     organization()
   ]

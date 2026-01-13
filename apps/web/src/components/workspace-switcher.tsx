@@ -1,5 +1,6 @@
 import { ChevronsUpDown, Plus } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
 
 import {
   DropdownMenu,
@@ -16,8 +17,13 @@ import { CreateOrganizationModal } from "./create-org-modal"
 
 export function WorkspaceSwitcher() {
   const { data: session } = authClient.useSession()
-  const { data: organizations } = authClient.organization.list()
   const navigate = useNavigate()
+
+  const { data: organizations } = useQuery({
+    queryKey: ["organizations"],
+    queryFn: () => authClient.organization.list().then((res) => res.data),
+    enabled: !!session
+  })
 
   const activeOrg = organizations?.find(
     (org) => org.id === session?.session.activeOrganizationId

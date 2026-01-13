@@ -4,6 +4,7 @@ import { apiFetch } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { CreateProjectModal } from "@/components/create-project-modal";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Folder } from "lucide-react";
 
 interface Project {
@@ -21,7 +22,6 @@ export default function ProjectsPage() {
     enabled: !!workspaceId
   });
 
-  if (isLoading) return <div className="flex items-center justify-center h-64">Loading projects...</div>;
   if (error) return <div className="text-destructive">Error loading projects</div>;
 
   return (
@@ -39,7 +39,21 @@ export default function ProjectsPage() {
         </CreateProjectModal>
       </div>
 
-      {!projects || projects.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="h-[140px]">
+              <CardHeader className="space-y-2">
+                <Skeleton className="h-5 w-1/2" />
+                <Skeleton className="h-4 w-1/3" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-1/4" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : !projects || projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg bg-muted/50">
           <Folder className="h-10 w-10 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium">No projects yet</h3>

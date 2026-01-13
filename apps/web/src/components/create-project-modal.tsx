@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api-client";
+import { toast } from "react-hot-toast";
 
 export function CreateProjectModal({ children }: { children: React.ReactNode }) {
   const { workspaceId } = useParams();
@@ -32,9 +33,10 @@ export function CreateProjectModal({ children }: { children: React.ReactNode }) 
       queryClient.invalidateQueries({ queryKey: ["projects", workspaceId] });
       setOpen(false);
       setName("");
+      toast.success("Project created successfully!");
     },
-    onError: (err) => {
-      alert(err.message);
+    onError: (err: any) => {
+      toast.error(err.message);
     }
   });
 
