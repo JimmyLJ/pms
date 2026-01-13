@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis } from "recharts";
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
+import { Folder, CheckCircle2, User, AlertTriangle, ArrowRight, Clock } from "lucide-react";
 
 export default function DashboardPage() {
   const { workspaceId } = useParams();
+  const { data: session } = authClient.useSession();
 
   const { data, isLoading } = useQuery({
     queryKey: ["analytics", workspaceId],
@@ -20,115 +21,190 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-48" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-1/3 mb-2" />
-              <Skeleton className="h-4 w-1/2" />
-            </CardHeader>
-            <CardContent className="h-[300px] flex items-center justify-center">
-              <Skeleton className="h-48 w-48 rounded-full" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-1/3 mb-2" />
-              <Skeleton className="h-4 w-1/2" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="flex justify-between items-center border-b pb-2 last:border-0">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-20" />
-                  </div>
-                  <Skeleton className="h-3 w-16" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-6">
+            <Skeleton className="h-64" />
+            <Skeleton className="h-64" />
+          </div>
+          <div className="space-y-6">
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!data) return <div className="p-10">No data available</div>;
+  // Mock data for display mostly, as API doesn't return everything yet
+  const stats = [
+    {
+      title: "项目总数",
+      value: "0",
+      description: `在 ${session?.session.activeOrganizationId ? "测试组织1" : "当前组织"}`,
+      icon: Folder,
+      color: "text-blue-500",
+      bg: "bg-blue-50 dark:bg-blue-500/10"
+    },
+    {
+      title: "已完成项目",
+      value: "0",
+      description: "占总数",
+      icon: CheckCircle2,
+      color: "text-green-500",
+      bg: "bg-green-50 dark:bg-green-500/10"
+    },
+    {
+      title: "我的任务",
+      value: "0",
+      description: "分配给我",
+      icon: User,
+      color: "text-purple-500",
+      bg: "bg-purple-50 dark:bg-purple-500/10"
+    },
+    {
+      title: "逾期",
+      value: "0",
+      description: "需要注意",
+      icon: AlertTriangle,
+      color: "text-orange-500",
+      bg: "bg-orange-50 dark:bg-orange-500/10"
+    }
+  ];
 
-  const { taskCounts, recentTasks } = data;
-
-  // Process data for charts
-  const chartData = taskCounts.map(item => ({
-    name: item.status.replace("_", " "),
-    value: item.count
-  }));
+  const recentTasks = data?.recentTasks || [];
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Task Distribution Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Task Distribution</CardTitle>
-            <CardDescription>Overview of task statuses across all projects</CardDescription>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                No tasks found
-              </div>
-            )}
-          </CardContent>
-        </Card>
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">欢迎回来, {session?.user.name?.split(' ')[1] || session?.user.name || "User"}</h2>
+        <p className="text-muted-foreground mt-1">这是所有项目的今日动态</p>
+      </div>
 
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest tasks created in this workspace</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {recentTasks.length > 0 ? (
-              <ul className="space-y-4">
-                {recentTasks.map((task: any) => (
-                  <li key={task.id} className="flex justify-between items-center border-b pb-2 last:border-0">
-                    <div>
-                      <p className="font-medium text-sm">{task.title}</p>
-                      <p className="text-xs text-muted-foreground">Status: {task.status}</p>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
+          <Card key={index} className="shadow-sm">
+            <CardContent className="p-6 flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                <h3 className="text-4xl font-bold mt-2">{stat.value}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+              </div>
+              <div className={`p-3 rounded-xl ${stat.bg}`}>
+                <stat.icon className={`h-6 w-6 ${stat.color}`} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Left Column (Main) */}
+        <div className="md:col-span-2 space-y-8">
+          {/* Project Overview */}
+          <Card className="shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-medium">项目概览</CardTitle>
+              <Button variant="ghost" size="sm" className="text-sm text-muted-foreground gap-1">
+                查看全部 <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="h-[300px] flex flex-col items-center justify-center text-center">
+              <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                <Folder className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium text-muted-foreground mb-4">暂无项目</h3>
+              <Button className="bg-blue-600 hover:bg-blue-700">创建您的第一个项目</Button>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium">最近活动</CardTitle>
+            </CardHeader>
+            <CardContent className="min-h-[200px] flex flex-col items-center justify-center">
+              {recentTasks.length > 0 ? (
+                <div className="w-full space-y-4">
+                  {recentTasks.map((task: any) => (
+                    <div key={task.id} className="flex items-center justify-between border-b pb-2 last:border-0 text-left w-full">
+                      <div>
+                        <p className="font-medium text-sm">{task.title}</p>
+                        <p className="text-xs text-muted-foreground">{task.status}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{new Date(task.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(task.createdAt).toLocaleDateString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="text-muted-foreground text-sm">No recent activity</div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <div className="h-12 w-12 bg-muted rounded-full flex items-center justify-center mb-3">
+                    <Clock className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">暂无最近活动</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column (Sidebar) */}
+        <div className="space-y-6">
+          {/* My Tasks */}
+          <Card className="shadow-sm">
+            <CardHeader className="py-4 flex flex-row items-center justify-between space-y-0">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">我的任务</CardTitle>
+              </div>
+              <span className="bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 px-2 py-0.5 rounded text-xs font-medium">0</span>
+            </CardHeader>
+            <CardContent className="pb-6 pt-2">
+              <div className="flex flex-col items-center justify-center py-4 text-center">
+                <p className="text-sm text-muted-foreground">暂无任务</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Overdue */}
+          <Card className="shadow-sm">
+            <CardHeader className="py-4 flex flex-row items-center justify-between space-y-0">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">逾期</CardTitle>
+              </div>
+              <span className="bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 px-2 py-0.5 rounded text-xs font-medium">0</span>
+            </CardHeader>
+            <CardContent className="pb-6 pt-2">
+              <div className="flex flex-col items-center justify-center py-4 text-center">
+                <p className="text-sm text-muted-foreground">无逾期任务</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* In Progress */}
+          <Card className="shadow-sm">
+            <CardHeader className="py-4 flex flex-row items-center justify-between space-y-0">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">进行中</CardTitle>
+              </div>
+              <span className="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded text-xs font-medium">0</span>
+            </CardHeader>
+            <CardContent className="pb-6 pt-2">
+              <div className="flex flex-col items-center justify-center py-4 text-center">
+                <p className="text-sm text-muted-foreground">无进行中任务</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )
