@@ -8,6 +8,7 @@ import WorkspaceLayout from "./components/workspace-layout"
 import DashboardPage from "./pages/dashboard"
 import ProjectsPage from "./pages/projects"
 import ProjectBoardPage from "./pages/project-board"
+import MembersPage from "./pages/members"
 
 export default function App() {
   return (
@@ -24,8 +25,7 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="projects/:projectId" element={<ProjectBoardPage />} />
-            <Route path="settings" element={<div>Settings Placeholder</div>} />
-            <Route path="members" element={<div>Members Placeholder</div>} />
+            <Route path="members" element={<MembersPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -24,7 +24,7 @@ export default function SignInPage() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Logged in successfully!");
+      toast.success("登录成功！");
       navigate("/");
     }
   };

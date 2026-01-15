@@ -1,11 +1,56 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
-import { Folder, CheckCircle2, User, AlertTriangle, ArrowRight, Clock } from "lucide-react";
+import { Folder, CheckCircle2, User, AlertTriangle, ArrowRight, Clock, Users, Calendar } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { CreateProjectModal } from "@/components/create-project-modal";
+import { cn } from "@/lib/utils";
+
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string | null;
+  priority: string | null;
+  progress: number | null;
+  createdAt: string;
+  dueDate: string | null;
+  memberCount?: number;
+}
+
+const statusLabels: Record<string, string> = {
+  planning: "规划中",
+  active: "进行中",
+  completed: "已完成",
+  on_hold: "暂停",
+  cancelled: "已取消",
+};
+
+const statusStyles: Record<string, string> = {
+  planning: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  active: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
+  completed: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
+  on_hold: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
+  cancelled: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400",
+};
+
+
+
+const progressBarStyles: Record<string, string> = {
+  planning: "bg-yellow-300",
+  active: "bg-yellow-300",
+  completed: "bg-cyan-300",
+  on_hold: "bg-amber-300",
+  cancelled: "bg-rose-300",
+};
+
+
+
+
 
 export default function DashboardPage() {
   const { workspaceId } = useParams();
@@ -13,7 +58,7 @@ export default function DashboardPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["analytics", workspaceId],
-    queryFn: () => apiFetch<{ data: { taskCounts: any[], recentTasks: any[] } }>(`/api/analytics/dashboard?workspaceId=${workspaceId}`).then(r => r.data),
+    queryFn: () => apiFetch<{ data: { taskCounts: any[], recentTasks: any[], recentProjects: Project[] } }>(`/api/analytics/dashboard?workspaceId=${workspaceId}`).then(r => r.data),
     enabled: !!workspaceId
   });
 
@@ -42,19 +87,26 @@ export default function DashboardPage() {
     );
   }
 
-  // Mock data for display mostly, as API doesn't return everything yet
+  const recentProjects = data?.recentProjects || [];
+  const recentTasks = data?.recentTasks || [];
+
+  // 计算项目统计数据
+  const totalProjects = recentProjects.length;
+  const completedProjects = recentProjects.filter((p: Project) => p.status === "completed").length;
+
+  // Mock data for stats (keep existing functionality)
   const stats = [
     {
       title: "项目总数",
-      value: "0",
-      description: `在 ${session?.session.activeOrganizationId ? "测试组织1" : "当前组织"}`,
+      value: String(totalProjects),
+      description: "在当前工作区",
       icon: Folder,
       color: "text-blue-500",
       bg: "bg-blue-50 dark:bg-blue-500/10"
     },
     {
       title: "已完成项目",
-      value: "0",
+      value: String(completedProjects),
       description: "占总数",
       icon: CheckCircle2,
       color: "text-green-500",
@@ -77,8 +129,6 @@ export default function DashboardPage() {
       bg: "bg-orange-50 dark:bg-orange-500/10"
     }
   ];
-
-  const recentTasks = data?.recentTasks || [];
 
   return (
     <div className="space-y-8">
@@ -110,26 +160,97 @@ export default function DashboardPage() {
         <div className="md:col-span-2 space-y-8">
           {/* Project Overview */}
           <Card className="shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pt-4 pb-4">
               <CardTitle className="text-lg font-medium">项目概览</CardTitle>
-              <Button variant="ghost" size="sm" className="text-sm text-muted-foreground gap-1">
+              <Link to={`/w/${workspaceId}/projects`} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
                 查看全部 <ArrowRight className="h-4 w-4" />
-              </Button>
+              </Link>
             </CardHeader>
-            <CardContent className="h-[300px] flex flex-col items-center justify-center text-center">
-              <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                <Folder className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium text-muted-foreground mb-4">暂无项目</h3>
-              <Button className="bg-blue-600 hover:bg-blue-700">创建您的第一个项目</Button>
-            </CardContent>
+            <Separator />
+            {recentProjects.length > 0 ? (
+              <CardContent className="pt-0 divide-y">
+                {recentProjects.map((project: Project) => {
+                  const normalizedStatus = (project.status || "planning").toLowerCase().replace(/\s+/g, "_");
+                  const statusLabel = statusLabels[normalizedStatus] || statusLabels.planning;
+                  const statusStyle = statusStyles[normalizedStatus] || statusStyles.planning;
+
+                  const progressBarStyle = progressBarStyles[normalizedStatus] || progressBarStyles.planning;
+                  const progressValue = Math.max(0, Math.min(100, Number(project.progress ?? 0)));
+                  const memberCount = project.memberCount ?? 1;
+                  const dueDate = project.dueDate
+                    ? new Date(project.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    : new Date(project.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                  return (
+                    <Link
+                      key={project.id}
+                      to={`/w/${workspaceId}/projects/${project.id}`}
+                      className="block py-5 last:pb-0 hover:bg-muted/30 transition-colors -mx-6 px-6"
+                    >
+                      {/* 项目标题和状态 */}
+                      <div className="flex items-start justify-between mb-1">
+                        <h3 className="text-base font-bold text-foreground">{project.name}</h3>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={cn("text-xs font-bold px-2 py-0.5 rounded-sm", statusStyle)}>
+                            {statusLabel}
+                          </span>
+                          <div className="h-2.5 w-2.5 rounded-full border-2 border-yellow-400 bg-transparent" />
+                        </div>
+                      </div>
+
+                      {/* 项目描述 */}
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {project.description || "暂无描述"}
+                      </p>
+
+                      {/* 成员数和日期 */}
+                      <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3">
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-4 w-4" />
+                          <span>{memberCount} 成员</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4" />
+                          <span>{dueDate}</span>
+                        </div>
+                      </div>
+
+                      {/* 进度条 */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>进度</span>
+                          <span>{progressValue}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className={cn("h-full rounded-full transition-all", progressBarStyle)}
+                            style={{ width: `${Math.max(progressValue, 2)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </CardContent>
+            ) : (
+              <CardContent className="h-[200px] flex flex-col items-center justify-center text-center">
+                <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                  <Folder className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium text-muted-foreground mb-4">暂无项目</h3>
+                <CreateProjectModal>
+                  <Button className="bg-blue-600 hover:bg-blue-700">创建您的第一个项目</Button>
+                </CreateProjectModal>
+              </CardContent>
+            )}
           </Card>
 
           {/* Recent Activity */}
           <Card className="shadow-sm">
-            <CardHeader className="pb-2">
+            <CardHeader className="pt-4 pb-4">
               <CardTitle className="text-lg font-medium">最近活动</CardTitle>
             </CardHeader>
+            <Separator />
             <CardContent className="min-h-[200px] flex flex-col items-center justify-center">
               {recentTasks.length > 0 ? (
                 <div className="w-full space-y-4">
@@ -166,6 +287,7 @@ export default function DashboardPage() {
               </div>
               <span className="bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 px-2 py-0.5 rounded text-xs font-medium">0</span>
             </CardHeader>
+            <Separator />
             <CardContent className="pb-6 pt-2">
               <div className="flex flex-col items-center justify-center py-4 text-center">
                 <p className="text-sm text-muted-foreground">暂无任务</p>
@@ -182,6 +304,7 @@ export default function DashboardPage() {
               </div>
               <span className="bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 px-2 py-0.5 rounded text-xs font-medium">0</span>
             </CardHeader>
+            <Separator />
             <CardContent className="pb-6 pt-2">
               <div className="flex flex-col items-center justify-center py-4 text-center">
                 <p className="text-sm text-muted-foreground">无逾期任务</p>
@@ -198,6 +321,7 @@ export default function DashboardPage() {
               </div>
               <span className="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded text-xs font-medium">0</span>
             </CardHeader>
+            <Separator />
             <CardContent className="pb-6 pt-2">
               <div className="flex flex-col items-center justify-center py-4 text-center">
                 <p className="text-sm text-muted-foreground">无进行中任务</p>

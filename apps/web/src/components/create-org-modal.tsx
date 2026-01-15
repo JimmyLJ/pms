@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -14,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "react-hot-toast";
+import { Upload } from "lucide-react";
 
 export function CreateOrganizationModal({ children }: { children: React.ReactNode }) {
   const [name, setName] = useState("");
@@ -33,7 +32,7 @@ export function CreateOrganizationModal({ children }: { children: React.ReactNod
     if (error) {
       toast.error(error.message);
     } else if (data) {
-      toast.success("Workspace created successfully!");
+      toast.success("工作区创建成功！");
       setOpen(false);
       setName("");
       setSlug("");
@@ -43,44 +42,72 @@ export function CreateOrganizationModal({ children }: { children: React.ReactNod
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) {
+        setName("");
+        setSlug("");
+      }
+    }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create Workspace</DialogTitle>
-          <DialogDescription>
-            Workspaces are where your team manages projects and tasks.
-          </DialogDescription>
+          <DialogTitle>创建工作区</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-6 py-4">
+          {/* Logo 上传区域 */}
           <div className="grid gap-2">
-            <Label htmlFor="name">Workspace Name</Label>
+            <Label>Logo</Label>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-16 h-16 border-2 border-dashed rounded-lg text-muted-foreground">
+                <Upload className="h-6 w-6" />
+              </div>
+              <div>
+                <Button variant="outline" size="sm" disabled>
+                  上传
+                </Button>
+                <p className="text-xs text-muted-foreground mt-1">
+                  推荐尺寸 1:1，最大 10MB
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 名称输入 */}
+          <div className="grid gap-2">
+            <Label htmlFor="name">名称</Label>
             <Input
               id="name"
-              placeholder="Acme Corp"
+              placeholder="工作区名称"
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
-                // 自动生成简单的 slug
                 setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
               }}
             />
           </div>
+
+          {/* 标识输入 */}
           <div className="grid gap-2">
-            <Label htmlFor="slug">Workspace Slug</Label>
+            <Label htmlFor="slug">唯一标识</Label>
             <Input
               id="slug"
-              placeholder="acme-corp"
+              placeholder="my-workspace"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button onClick={handleCreate} disabled={loading}>
-            {loading ? "Creating..." : "Create Workspace"}
+
+        <div className="flex justify-end">
+          <Button
+            onClick={handleCreate}
+            disabled={loading || !name.trim() || !slug.trim()}
+            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {loading ? "创建中..." : "创建工作区"}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -8,18 +8,19 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "hono": "^4.6.16",
     "@hono/node-server": "^1.13.7",
-    "drizzle-orm": "^0.41.0",
-    "pg": "^8.13.1",
+    "better-auth": "^1.4.10",
     "dotenv": "^16.4.7",
-    "better-auth": "^1.4.10"
+    "drizzle-orm": "^0.41.0",
+    "hono": "^4.6.16",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.3",
     "@types/node": "^22.10.5",
+    "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.31.4",
-    "@types/pg": "^8.11.10"
+    "drizzle-seed": "^0.3.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
 }

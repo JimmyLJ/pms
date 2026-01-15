@@ -81,9 +81,23 @@ export const invitation = pgTable("invitation", {
 export const projects = pgTable("project", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  description: text("description"),
+  status: text("status").default("planning"),
+  priority: text("priority").default("medium"),
+  startDate: timestamp("startDate"),
+  endDate: timestamp("endDate"),
+  leadId: text("leadId").references(() => user.id),
+  progress: integer("progress").default(0),
   organizationId: text("organizationId").notNull().references(() => organization.id, { onDelete: 'cascade' }),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
+});
+
+export const projectMembers = pgTable("project_member", {
+  id: text("id").primaryKey(),
+  projectId: text("projectId").notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  userId: text("userId").notNull().references(() => user.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("createdAt").notNull(),
 });
 
 export const tasks = pgTable("task", {
@@ -91,6 +105,8 @@ export const tasks = pgTable("task", {
   title: text("title").notNull(),
   description: text("description"),
   status: text("status").notNull(), // 'TODO', 'IN_PROGRESS', 'DONE', etc.
+  type: text("type"), // 'TASK', 'BUG', 'FEATURE', 'IMPROVEMENT', 'OTHER'
+  priority: text("priority").default("medium"), // 'LOW', 'MEDIUM', 'HIGH'
   position: integer("position").notNull().default(0),
   projectId: text("projectId").notNull().references(() => projects.id, { onDelete: 'cascade' }),
   organizationId: text("organizationId").notNull().references(() => organization.id, { onDelete: 'cascade' }),

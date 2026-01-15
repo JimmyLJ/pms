@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { LayoutDashboard, Users, Settings, LogOut, Folder, CheckSquare } from "lucide-react"
 import { NavLink, useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -6,12 +7,20 @@ import { WorkspaceSwitcher } from "./workspace-switcher"
 import { Button } from "./ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Separator } from "./ui/separator"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> { }
 
 export function Sidebar({ className }: SidebarProps) {
   const { data: session } = authClient.useSession()
   const navigate = useNavigate()
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   // Helper to determine active state styles
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -21,7 +30,7 @@ export function Sidebar({ className }: SidebarProps) {
     )
 
   return (
-    <div className={cn("pb-12 w-64 border-r bg-background flex flex-col h-full", className)}>
+    <div className={cn("pb-12 w-64 border-r bg-background flex flex-col h-screen overflow-y-auto", className)}>
       <div className="py-4 flex-1">
         <div className="px-3 py-2">
           <WorkspaceSwitcher />
@@ -41,10 +50,22 @@ export function Sidebar({ className }: SidebarProps) {
               <Users className="h-4 w-4" />
               团队
             </NavLink>
-            <NavLink to="settings" className={navLinkClass}>
-              <Settings className="h-4 w-4" />
-              设置
-            </NavLink>
+            <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+              <DialogTrigger asChild>
+                <button className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full text-left">
+                  <Settings className="h-4 w-4" />
+                  设置
+                </button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>设置</DialogTitle>
+                </DialogHeader>
+                <div className="py-4 text-muted-foreground text-center">
+                  设置
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 

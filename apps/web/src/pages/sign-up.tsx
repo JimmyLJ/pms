@@ -26,7 +26,7 @@ export default function SignUpPage() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Account created successfully!");
+      toast.success("账号创建成功！");
       navigate("/");
     }
   };

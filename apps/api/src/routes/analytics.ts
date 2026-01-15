@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db } from "../db";
-import { tasks } from "../db/schema";
+import { tasks, projects } from "../db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import { auth } from "../lib/auth";
 
@@ -30,7 +30,15 @@ const app = new Hono()
       .orderBy(desc(tasks.createdAt))
       .limit(5);
 
-    return c.json({ data: { taskCounts, recentTasks } });
+    // 3. 最近创建的项目 (Limit 5)
+    const recentProjects = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.organizationId, workspaceId))
+      .orderBy(desc(projects.createdAt))
+      .limit(3);
+
+    return c.json({ data: { taskCounts, recentTasks, recentProjects } });
   });
 
 export default app;
