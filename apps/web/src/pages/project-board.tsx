@@ -13,6 +13,10 @@ import {
   Bug,
   Settings2,
   FileText,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  User,
 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api-client";
@@ -76,11 +80,7 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
   cancelled: { label: "已取消", className: "bg-red-100 text-red-800 hover:bg-red-100" },
 };
 
-const TASK_STATUS_MAP: Record<string, { label: string; color: string }> = {
-  TODO: { label: "待办", color: "text-gray-600" },
-  IN_PROGRESS: { label: "进行中", color: "text-orange-600" },
-  DONE: { label: "已完成", color: "text-green-600" },
-};
+
 
 const PRIORITY_MAP: Record<string, { label: string; className: string }> = {
   HIGH: { label: "高", className: "bg-green-100 text-green-700 hover:bg-green-100" },
@@ -93,13 +93,48 @@ const TYPE_CONFIG: Record<string, { label: string; color: string; icon: typeof Z
   TASK: { label: "任务", color: "text-green-500", icon: Square },
   IMPROVEMENT: { label: "优化", color: "text-purple-500", icon: Settings2 },
   BUG: { label: "缺陷", color: "text-red-500", icon: Bug },
-  OTHER: { label: "其他", color: "text-green-500", icon: FileText },
+  OTHER: { label: "其他", color: "text-orange-500", icon: FileText },
 };
 
 // 日期格式化函数
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr);
   return date.toLocaleDateString("zh-CN", { day: "numeric", month: "long" });
+};
+
+// 日历辅助函数
+const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
+
+const isSameDay = (date1: Date, date2: Date) => {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+};
+
+const getCalendarDays = (year: number, month: number) => {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startingDay = firstDay.getDay();
+
+  const days: (number | null)[] = [];
+  for (let i = 0; i < startingDay; i++) {
+    days.push(null);
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push(i);
+  }
+  return days;
+};
+
+const formatMonthYear = (date: Date) => {
+  return date.toLocaleDateString("zh-CN", { year: "numeric", month: "long" });
+};
+
+const formatShortDate = (date: Date) => {
+  return date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
 };
 
 export default function ProjectBoardPage() {
@@ -109,6 +144,10 @@ export default function ProjectBoardPage() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [assigneeFilter, setAssigneeFilter] = useState("all");
+
+  // 日历状态
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // 更新任务状态
   const updateStatusMutation = useMutation({
@@ -160,6 +199,54 @@ export default function ProjectBoardPage() {
     if (assigneeFilter !== "all" && task.assignee?.id !== assigneeFilter) return false;
     return true;
   });
+
+  // 日历相关计算
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const calendarDays = getCalendarDays(currentMonth.getFullYear(), currentMonth.getMonth());
+
+  // 获取某天的任务数量
+  const getTaskCountForDay = (day: number) => {
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    return tasks.filter((task) => {
+      if (!task.dueDate) return false;
+      const taskDate = new Date(task.dueDate);
+      return isSameDay(taskDate, date);
+    }).length;
+  };
+
+  // 选中日期的任务
+  const selectedDateTasks = tasks.filter((task) => {
+    if (!task.dueDate) return false;
+    const taskDate = new Date(task.dueDate);
+    return isSameDay(taskDate, selectedDate);
+  });
+
+  // 即将到期的任务（3天内，包含今天）
+  const upcomingTasks = tasks.filter((task) => {
+    if (!task.dueDate || task.status === "DONE") return false;
+    const taskDate = new Date(task.dueDate);
+    taskDate.setHours(0, 0, 0, 0);
+    const threeDaysLater = new Date(today);
+    threeDaysLater.setDate(threeDaysLater.getDate() + 3);
+    return taskDate >= today && taskDate <= threeDaysLater;
+  });
+
+  // 已逾期的任务
+  const overdueTasks = tasks.filter((task) => {
+    if (!task.dueDate || task.status === "DONE") return false;
+    const taskDate = new Date(task.dueDate);
+    taskDate.setHours(0, 0, 0, 0);
+    return taskDate < today;
+  });
+
+  // 月份导航
+  const goToPrevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  };
+  const goToNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  };
 
   const projectStatus = (project?.status || "planning").toLowerCase();
   const statusInfo = STATUS_MAP[projectStatus] || STATUS_MAP.planning;
@@ -262,19 +349,19 @@ export default function ProjectBoardPage() {
       {/* Tab 导航 */}
       <Tabs defaultValue="tasks" className="flex-1 flex flex-col">
         <TabsList className="w-fit">
-          <TabsTrigger value="tasks" className="gap-2">
+          <TabsTrigger value="tasks" className="gap-2 cursor-pointer">
             <ListTodo className="h-4 w-4" />
             任务
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="gap-2">
+          <TabsTrigger value="calendar" className="gap-2 cursor-pointer">
             <Calendar className="h-4 w-4" />
             日历
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2">
+          <TabsTrigger value="analytics" className="gap-2 cursor-pointer">
             <BarChart3 className="h-4 w-4" />
             分析
           </TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2">
+          <TabsTrigger value="settings" className="gap-2 cursor-pointer">
             <Settings className="h-4 w-4" />
             设置
           </TabsTrigger>
@@ -444,9 +531,226 @@ export default function ProjectBoardPage() {
 
         {/* Calendar Tab */}
         <TabsContent value="calendar" className="flex-1">
-          <Card className="h-full flex items-center justify-center">
-            <p className="text-muted-foreground">日历视图即将推出...</p>
-          </Card>
+          <div className="flex gap-6 h-full">
+            {/* 左侧：日历 + 选中日期任务 */}
+            <div className="flex-1 flex flex-col gap-4">
+              {/* 日历卡片 */}
+              <Card className="p-6">
+                {/* 日历头部 */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold">任务日历</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={goToPrevMonth}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm font-medium min-w-[120px] text-center">
+                      {formatMonthYear(currentMonth)}
+                    </span>
+                    <Button variant="ghost" size="icon" onClick={goToNextMonth}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* 星期标题 */}
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {WEEKDAYS.map((day) => (
+                    <div key={day} className="text-center text-sm text-muted-foreground py-2">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* 日期网格 */}
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarDays.map((day, index) => {
+                    if (day === null) {
+                      return <div key={`empty-${index}`} className="h-16" />;
+                    }
+                    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+                    const isSelected = isSameDay(date, selectedDate);
+                    const isToday = isSameDay(date, new Date());
+                    const taskCount = getTaskCountForDay(day);
+
+                    return (
+                      <button
+                        key={day}
+                        onClick={() => setSelectedDate(date)}
+                        className={`h-16 rounded-lg flex flex-col items-center justify-center transition-colors ${isSelected
+                          ? "bg-blue-500 text-white"
+                          : isToday
+                            ? "bg-blue-50 text-blue-600"
+                            : "hover:bg-gray-100"
+                          }`}
+                      >
+                        <span className="text-sm font-medium">{day}</span>
+                        {taskCount > 0 && (
+                          <span className={`text-xs ${isSelected ? "text-blue-100" : "text-blue-500"}`}>
+                            {taskCount}个任务
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+
+              {/* 选中日期的任务 */}
+              <Card className="p-6 mb-4">
+                <h3 className="text-lg font-semibold mb-4">
+                  {selectedDate.toLocaleDateString("zh-CN", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                  的任务
+                </h3>
+                {selectedDateTasks.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">该日期没有任务</p>
+                ) : (
+                  <div className="space-y-3">
+                    {selectedDateTasks.map((task) => {
+                      // Determine bar color based on priority (default to yellow/gold for medium/default)
+                      let barColor = "bg-yellow-400";
+                      if (task.priority === 'HIGH') barColor = "bg-red-500";
+                      if (task.priority === 'LOW') barColor = "bg-green-500";
+                      if (task.priority === 'MEDIUM') barColor = "bg-yellow-400";
+
+                      const typeConfig = task.type ? TYPE_CONFIG[task.type] : null;
+                      let badgeClass = "bg-gray-100 text-gray-700";
+
+                      if (typeConfig) {
+                        if (typeConfig.color.includes("red")) badgeClass = "bg-red-100 text-red-700 hover:bg-red-100";
+                        else if (typeConfig.color.includes("purple")) badgeClass = "bg-purple-100 text-purple-700 hover:bg-purple-100";
+                        else if (typeConfig.color.includes("orange")) badgeClass = "bg-orange-100 text-orange-700 hover:bg-orange-100";
+                        else badgeClass = "bg-green-100 text-green-700 hover:bg-green-100";
+                      }
+
+                      return (
+                        <div
+                          key={task.id}
+                          className="flex items-stretch gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                        >
+                          <div className={`w-1.5 shrink-0 rounded-full ${barColor}`} />
+                          <div className="flex-1 flex justify-between items-start">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-lg font-semibold text-gray-900">{task.title}</span>
+                              <span className="text-sm text-muted-foreground">
+                                {task.priority && PRIORITY_MAP[task.priority]
+                                  ? `${PRIORITY_MAP[task.priority].label}优先级`
+                                  : ""}
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col items-end gap-2">
+                              {typeConfig && (
+                                <Badge
+                                  variant="secondary"
+                                  className={`text-xs font-medium px-2 py-0.5 ${badgeClass}`}
+                                >
+                                  {typeConfig.label}
+                                </Badge>
+                              )}
+                              {task.assignee && (
+                                <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                                  <User className="h-3.5 w-3.5" />
+                                  <span>{task.assignee.name}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* 右侧边栏 */}
+            <div className="w-80 flex flex-col gap-4">
+              {/* 即将到期 */}
+              <Card className="p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Clock className="h-5 w-5" />
+                  <h4 className="font-semibold text-base">即将到期</h4>
+                </div>
+                {upcomingTasks.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">暂无即将到期的任务</p>
+                ) : (
+                  <div className="space-y-3">
+                    {upcomingTasks.map((task) => {
+                      const typeConfig = task.type ? TYPE_CONFIG[task.type] : null;
+                      let badgeClass = "bg-gray-100 text-gray-700";
+
+                      if (typeConfig) {
+                        if (typeConfig.color.includes("red")) badgeClass = "bg-red-100 text-red-700 hover:bg-red-100";
+                        else if (typeConfig.color.includes("purple")) badgeClass = "bg-purple-100 text-purple-700 hover:bg-purple-100";
+                        else if (typeConfig.color.includes("orange")) badgeClass = "bg-orange-100 text-orange-700 hover:bg-orange-100";
+                        else badgeClass = "bg-green-100 text-green-700 hover:bg-green-100";
+                      }
+
+                      return (
+                        <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                          <div className="flex flex-col gap-1">
+                            <p className="font-medium text-sm text-gray-900">{task.title}</p>
+                            <p className="text-xs text-gray-500">
+                              {task.dueDate && formatShortDate(new Date(task.dueDate))}
+                            </p>
+                          </div>
+                          {typeConfig && (
+                            <Badge
+                              variant="secondary"
+                              className={`text-xs font-medium px-2 py-0.5 ${badgeClass}`}
+                            >
+                              {typeConfig.label}
+                            </Badge>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+
+              {/* 已逾期 */}
+              <Card className={`p-4 border-l-4 border-l-red-500 shadow-sm mb-6 ${overdueTasks.length > 0 ? "border-red-100" : ""}`}>
+                <div className="flex items-center gap-2 mb-4">
+                  <Clock className={`h-5 w-5 ${overdueTasks.length > 0 ? "text-red-600" : "text-muted-foreground"}`} />
+                  <h4 className={`font-semibold text-base ${overdueTasks.length > 0 ? "text-red-700" : ""}`}>
+                    已逾期 ({overdueTasks.length})
+                  </h4>
+                </div>
+                {overdueTasks.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">暂无逾期任务</p>
+                ) : (
+                  <div className="space-y-3">
+                    {overdueTasks.map((task) => (
+                      <div key={task.id} className="flex items-center justify-between p-3 bg-red-50 rounded-xl">
+                        <div className="flex flex-col gap-1">
+                          <p className="font-medium text-sm text-gray-900">{task.title}</p>
+                          <p className="text-xs text-red-600 font-medium">
+                            截止于 {task.dueDate && formatShortDate(new Date(task.dueDate))}
+                          </p>
+                        </div>
+                        {task.type && TYPE_CONFIG[task.type] && (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs font-medium px-2 py-0.5 bg-red-200 text-red-800 hover:bg-red-200"
+                          >
+                            {TYPE_CONFIG[task.type].label}
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Analytics Tab */}
