@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Zap,
   ListTodo,
   Calendar,
+  Calendar as CalendarIcon,
   BarChart3,
   Settings,
+  Square,
+  Bug,
+  Settings2,
+  FileText,
 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api-client";
@@ -31,6 +36,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CreateTaskModal } from "@/components/kanban/create-task-modal";
 
 interface ProjectMember {
@@ -76,26 +82,49 @@ const TASK_STATUS_MAP: Record<string, { label: string; color: string }> = {
   DONE: { label: "已完成", color: "text-green-600" },
 };
 
-const PRIORITY_MAP: Record<string, { label: string; color: string }> = {
-  HIGH: { label: "高", color: "text-red-600" },
-  MEDIUM: { label: "中", color: "text-yellow-600" },
-  LOW: { label: "低", color: "text-green-600" },
+const PRIORITY_MAP: Record<string, { label: string; className: string }> = {
+  HIGH: { label: "高", className: "bg-green-100 text-green-700 hover:bg-green-100" },
+  MEDIUM: { label: "中", className: "bg-blue-100 text-blue-700 hover:bg-blue-100" },
+  LOW: { label: "低", className: "bg-pink-100 text-pink-700 hover:bg-pink-100" },
 };
 
-const TYPE_MAP: Record<string, string> = {
-  TASK: "任务",
-  BUG: "缺陷",
-  FEATURE: "功能",
-  IMPROVEMENT: "优化",
-  OTHER: "其他",
+const TYPE_CONFIG: Record<string, { label: string; color: string; icon: typeof Zap }> = {
+  FEATURE: { label: "功能", color: "text-green-500", icon: Zap },
+  TASK: { label: "任务", color: "text-green-500", icon: Square },
+  IMPROVEMENT: { label: "优化", color: "text-purple-500", icon: Settings2 },
+  BUG: { label: "缺陷", color: "text-red-500", icon: Bug },
+  OTHER: { label: "其他", color: "text-green-500", icon: FileText },
+};
+
+// 日期格式化函数
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("zh-CN", { day: "numeric", month: "long" });
 };
 
 export default function ProjectBoardPage() {
   const { workspaceId, projectId } = useParams();
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [assigneeFilter, setAssigneeFilter] = useState("all");
+
+  // 更新任务状态
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ taskId, status }: { taskId: string; status: string }) =>
+      apiFetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+    },
+  });
+
+  const updateTaskStatus = (taskId: string, status: string) => {
+    updateStatusMutation.mutate({ taskId, status });
+  };
 
   // 获取项目信息
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -309,7 +338,7 @@ export default function ProjectBoardPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-8">
-                    <div className="h-3 w-3 rounded-full bg-blue-500" />
+                    <div className="h-3 w-3 rounded-full bg-gray-400" />
                   </TableHead>
                   <TableHead>标题</TableHead>
                   <TableHead>类型</TableHead>
@@ -339,29 +368,71 @@ export default function ProjectBoardPage() {
                   filteredTasks.map((task) => (
                     <TableRow key={task.id}>
                       <TableCell>
-                        <div className="h-3 w-3 rounded-full bg-blue-500" />
+                        <div className="h-3 w-3 rounded-full bg-gray-400" />
                       </TableCell>
                       <TableCell className="font-medium">{task.title}</TableCell>
-                      <TableCell>{task.type ? TYPE_MAP[task.type] || task.type : "-"}</TableCell>
                       <TableCell>
-                        {task.priority ? (
-                          <span className={PRIORITY_MAP[task.priority]?.color}>
-                            {PRIORITY_MAP[task.priority]?.label || task.priority}
-                          </span>
+                        {task.type && TYPE_CONFIG[task.type] ? (() => {
+                          const config = TYPE_CONFIG[task.type];
+                          const Icon = config.icon;
+                          return (
+                            <div className="flex items-center gap-2">
+                              <Icon className={`h-4 w-4 ${config.color}`} />
+                              <span className={config.color}>{config.label}</span>
+                            </div>
+                          );
+                        })() : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {task.priority && PRIORITY_MAP[task.priority] ? (
+                          <Badge className={PRIORITY_MAP[task.priority].className}>
+                            {PRIORITY_MAP[task.priority].label}
+                          </Badge>
                         ) : (
                           "-"
                         )}
                       </TableCell>
                       <TableCell>
-                        <span className={TASK_STATUS_MAP[task.status]?.color}>
-                          {TASK_STATUS_MAP[task.status]?.label || task.status}
-                        </span>
+                        <Select
+                          value={task.status}
+                          onValueChange={(value) => updateTaskStatus(task.id, value)}
+                        >
+                          <SelectTrigger className="w-[120px] h-8 border-0 bg-transparent hover:bg-gray-100">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="TODO">待办</SelectItem>
+                            <SelectItem value="IN_PROGRESS">进行中</SelectItem>
+                            <SelectItem value="DONE">已完成</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
-                      <TableCell>{task.assignee?.name || "-"}</TableCell>
                       <TableCell>
-                        {task.dueDate
-                          ? new Date(task.dueDate).toLocaleDateString()
-                          : "-"}
+                        {task.assignee ? (
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={task.assignee.image || undefined} />
+                              <AvatarFallback className="text-xs bg-blue-100 text-blue-800">
+                                {task.assignee.name?.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{task.assignee.name}</span>
+                          </div>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {task.dueDate ? (
+                          <div className="flex items-center gap-2">
+                            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                            <span>{formatDate(task.dueDate)}</span>
+                          </div>
+                        ) : (
+                          "-"
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

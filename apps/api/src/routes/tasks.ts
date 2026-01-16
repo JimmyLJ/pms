@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db } from "../db";
-import { tasks } from "../db/schema";
+import { tasks, user } from "../db/schema";
 import { eq, asc } from "drizzle-orm";
 import { auth } from "../lib/auth";
 
@@ -12,11 +12,51 @@ const app = new Hono()
     const projectId = c.req.query("projectId");
     if (!projectId) return c.json({ error: "Missing projectId" }, 400);
 
-    const data = await db
-      .select()
+    const rows = await db
+      .select({
+        id: tasks.id,
+        title: tasks.title,
+        description: tasks.description,
+        status: tasks.status,
+        type: tasks.type,
+        priority: tasks.priority,
+        position: tasks.position,
+        projectId: tasks.projectId,
+        organizationId: tasks.organizationId,
+        assigneeId: tasks.assigneeId,
+        dueDate: tasks.dueDate,
+        createdAt: tasks.createdAt,
+        updatedAt: tasks.updatedAt,
+        assigneeName: user.name,
+        assigneeImage: user.image,
+      })
       .from(tasks)
+      .leftJoin(user, eq(tasks.assigneeId, user.id))
       .where(eq(tasks.projectId, projectId))
       .orderBy(asc(tasks.position));
+
+    const data = rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      status: row.status,
+      type: row.type,
+      priority: row.priority,
+      position: row.position,
+      projectId: row.projectId,
+      organizationId: row.organizationId,
+      assigneeId: row.assigneeId,
+      dueDate: row.dueDate,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      assignee: row.assigneeId
+        ? {
+            id: row.assigneeId,
+            name: row.assigneeName,
+            image: row.assigneeImage,
+          }
+        : null,
+    }));
 
     return c.json({ data });
   })
@@ -24,7 +64,17 @@ const app = new Hono()
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) return c.json({ error: "Unauthorized" }, 401);
 
-    const { title, projectId, workspaceId, status } = await c.req.json();
+    const {
+      title,
+      description,
+      projectId,
+      workspaceId,
+      status,
+      type,
+      priority,
+      dueDate,
+      assigneeId,
+    } = await c.req.json();
     if (!title || !projectId || !workspaceId) return c.json({ error: "Missing fields" }, 400);
 
     // Get max position
@@ -36,11 +86,15 @@ const app = new Hono()
       .values({
         id: crypto.randomUUID(),
         title,
+        description: description || null,
         projectId,
         organizationId: workspaceId,
         status: status || "TODO",
+        type: type || undefined,
+        priority: priority || undefined,
         position: 0, 
-        assigneeId: session.user.id,
+        assigneeId: typeof assigneeId === "string" ? assigneeId : null,
+        dueDate: dueDate ? new Date(dueDate) : null,
         createdAt: new Date(),
         updatedAt: new Date(),
       })

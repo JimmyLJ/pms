@@ -109,10 +109,14 @@ const app = new Hono()
       })
       .returning();
 
-    // 创建项目成员关联
-    if (memberIds && memberIds.length > 0) {
+    // 创建项目成员关联（自动加入创建者）
+    const requestedMemberIds = Array.isArray(memberIds) ? memberIds : [];
+    const memberIdSet = new Set<string>(requestedMemberIds.filter(Boolean));
+    memberIdSet.add(session.user.id);
+    const finalMemberIds = Array.from(memberIdSet);
+    if (finalMemberIds.length > 0) {
       await db.insert(projectMembers).values(
-        memberIds.map((userId: string) => ({
+        finalMemberIds.map((userId: string) => ({
           id: crypto.randomUUID(),
           projectId: newProject.id,
           userId,
