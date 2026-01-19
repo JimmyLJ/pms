@@ -7,13 +7,7 @@ import { WorkspaceSwitcher } from "./workspace-switcher"
 import { Button } from "./ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Separator } from "./ui/separator"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog"
+import { SettingsModal } from "./settings-modal"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> { }
 
@@ -50,22 +44,14 @@ export function Sidebar({ className }: SidebarProps) {
               <Users className="h-4 w-4" />
               团队
             </NavLink>
-            <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-              <DialogTrigger asChild>
-                <button className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full text-left">
-                  <Settings className="h-4 w-4" />
-                  设置
-                </button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>设置</DialogTitle>
-                </DialogHeader>
-                <div className="py-4 text-muted-foreground text-center">
-                  设置
-                </div>
-              </DialogContent>
-            </Dialog>
+            <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full text-left"
+            >
+              <Settings className="h-4 w-4" />
+              设置
+            </button>
           </div>
         </div>
 

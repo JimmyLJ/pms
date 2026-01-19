@@ -42,6 +42,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CreateTaskModal } from "@/components/kanban/create-task-modal";
+import { ProjectAnalytics } from "@/components/analytics/project-analytics";
+import { ProjectSettings } from "@/components/settings/project-settings";
 
 interface ProjectMember {
   id: string;
@@ -54,6 +56,10 @@ interface Project {
   name: string;
   status: string | null;
   description: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  priority?: string | null;
+  progress?: number | null;
   members?: ProjectMember[];
 }
 
@@ -754,17 +760,13 @@ export default function ProjectBoardPage() {
         </TabsContent>
 
         {/* Analytics Tab */}
-        <TabsContent value="analytics" className="flex-1">
-          <Card className="h-full flex items-center justify-center">
-            <p className="text-muted-foreground">分析视图即将推出...</p>
-          </Card>
+        <TabsContent value="analytics" className="flex-1 overflow-y-auto">
+          <ProjectAnalytics tasks={tasks} project={project} isLoading={tasksLoading} />
         </TabsContent>
 
         {/* Settings Tab */}
-        <TabsContent value="settings" className="flex-1">
-          <Card className="h-full flex items-center justify-center">
-            <p className="text-muted-foreground">项目设置即将推出...</p>
-          </Card>
+        <TabsContent value="settings" className="flex-1 overflow-y-auto">
+          <ProjectSettings project={project} />
         </TabsContent>
       </Tabs>
     </div>

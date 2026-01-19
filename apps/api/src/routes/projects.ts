@@ -126,6 +126,33 @@ const app = new Hono()
     }
 
     return c.json({ data: newProject });
+  })
+  .patch("/:projectId", async (c) => {
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (!session) return c.json({ error: "Unauthorized" }, 401);
+
+    const projectId = c.req.param("projectId");
+    const updates = await c.req.json();
+
+    // Remove immutable fields or validate as needed
+    delete updates.id;
+    delete updates.createdAt;
+    delete updates.updatedAt;
+    delete updates.organizationId; // Usually shouldn't change organization
+
+    if (updates.startDate) updates.startDate = new Date(updates.startDate);
+    if (updates.endDate) updates.endDate = new Date(updates.endDate);
+
+    const [updatedProject] = await db
+      .update(projects)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(projects.id, projectId))
+      .returning();
+
+    return c.json({ data: updatedProject });
   });
 
 export default app;

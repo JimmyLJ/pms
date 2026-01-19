@@ -1,7 +1,7 @@
 import * as React from "react"
 import { DayPicker } from "react-day-picker"
 import { zhCN } from "date-fns/locale"
-import { ChevronUp, ChevronDown } from "lucide-react"
+import { ChevronUp, ChevronDown, ArrowUp, ArrowDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -22,16 +22,16 @@ function Calendar({
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        month_caption: "flex justify-between items-center px-1",
+        month_caption: "flex justify-start pt-1 relative items-center",
         caption_label: "text-sm font-medium",
-        nav: "flex items-center gap-1",
+        nav: "flex items-center gap-1 absolute right-0 z-10",
         button_previous: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hidden"
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
         button_next: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hidden"
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
         month_grid: "w-full border-collapse space-y-1",
         weekdays: "flex",
@@ -44,7 +44,7 @@ function Calendar({
           "h-9 w-9 p-0 font-normal hover:bg-accent hover:text-accent-foreground"
         ),
         selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+          "bg-blue-600 text-white hover:bg-blue-700 hover:text-white focus:bg-blue-600 focus:text-white rounded-md",
         today: "border-2 border-primary rounded-md",
         outside:
           "text-muted-foreground opacity-50",
@@ -52,10 +52,13 @@ function Calendar({
         range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
+        footer: "pt-3 border-t mt-3 flex justify-between",
         ...classNames,
       }}
       components={{
         Chevron: ({ orientation }) => {
+          if (orientation === "left") return <ArrowUp className="h-4 w-4" />
+          if (orientation === "right") return <ArrowDown className="h-4 w-4" />
           if (orientation === "up") return <ChevronUp className="h-4 w-4" />
           return <ChevronDown className="h-4 w-4" />
         },
