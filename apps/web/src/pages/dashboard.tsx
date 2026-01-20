@@ -23,6 +23,38 @@ interface Project {
   memberCount?: number;
 }
 
+interface Task {
+  id: string;
+  title: string;
+  type?: string;
+  status?: string;
+  dueDate?: string;
+  createdAt: string;
+  assignee?: {
+    name?: string;
+    image?: string;
+  };
+}
+
+interface DashboardData {
+  counts: {
+    totalProjects: number;
+    completedProjects: number;
+    globalOverdue: number;
+    myTasks: number;
+    taskStatusCounts: Array<{ status: string; count: number }>;
+  };
+  lists: {
+    recentProjects: Project[];
+    recentActivity: Task[];
+    myStats: {
+      inProgress: Task[];
+      overdue: Task[];
+      recent: Task[];
+    };
+  };
+}
+
 const statusLabels: Record<string, string> = {
   planning: "规划中",
   active: "进行中",

@@ -24,7 +24,7 @@ export default function SignUpPage() {
     });
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(error.message || "注册失败");
     } else {
       toast.success("账号创建成功！");
       navigate("/");

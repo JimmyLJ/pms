@@ -30,7 +30,7 @@ export function CreateOrganizationModal({ children }: { children: React.ReactNod
     });
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(error.message || "创建失败");
     } else if (data) {
       toast.success("工作区创建成功！");
       setOpen(false);

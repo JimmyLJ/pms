@@ -1,5 +1,5 @@
 import * as React from "react"
-import { format, addMonths, subMonths, isWeekend, isToday, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, getDay } from "date-fns"
+import { format, addMonths, subMonths, isToday, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, getDay } from "date-fns"
 import { zhCN } from "date-fns/locale"
 import { Calendar as CalendarIcon, ChevronUp, ChevronDown } from "lucide-react"
 
@@ -115,7 +115,6 @@ export function DatePicker({ value, onChange, placeholder = "年/月/日" }: Dat
               const isCurrentMonth = day.getMonth() === currentMonth.getMonth()
               const isSelected = selectedDate && isSameDay(day, selectedDate)
               const isTodayDate = isToday(day)
-              const isWeekendDay = isWeekend(day)
               const dayOfWeek = getDay(day)
               const isSaturday = dayOfWeek === 6
               const isSunday = dayOfWeek === 0

@@ -70,7 +70,7 @@ export function WorkspaceSwitcher() {
                 <span className="text-xs font-semibold">NO</span>
               ) : (
                 <img
-                  src={org.image || org.logo || fallbackImage}
+                  src={org.logo || fallbackImage}
                   alt={`${org.name} logo`}
                   className="h-full w-full object-cover"
                 />
@@ -122,7 +122,7 @@ function ActiveWorkspaceDisplay({
           <span className="text-xs font-semibold">NO</span>
         ) : (
           <img
-            src={activeOrg?.image || activeOrg?.logo || fallbackImage}
+            src={activeOrg?.logo || fallbackImage}
             alt="logo"
             className="h-full w-full object-cover"
           />

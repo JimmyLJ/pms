@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -147,7 +147,6 @@ export default function ProjectBoardPage() {
   const { workspaceId, projectId } = useParams();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
 
   const currentTab = searchParams.get("tab") || "tasks";
 
