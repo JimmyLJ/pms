@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -146,6 +146,15 @@ const formatShortDate = (date: Date) => {
 export default function ProjectBoardPage() {
   const { workspaceId, projectId } = useParams();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const currentTab = searchParams.get("tab") || "tasks";
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
+
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -353,7 +362,7 @@ export default function ProjectBoardPage() {
       </div>
 
       {/* Tab 导航 */}
-      <Tabs defaultValue="tasks" className="flex-1 flex flex-col">
+      <Tabs value={currentTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
         <TabsList className="w-fit">
           <TabsTrigger value="tasks" className="gap-2 cursor-pointer">
             <ListTodo className="h-4 w-4" />
@@ -373,7 +382,7 @@ export default function ProjectBoardPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Tasks Tab */}
+        {/* 任务标签页 */}
         <TabsContent value="tasks" className="flex-1 flex flex-col space-y-4">
           {/* 筛选器 */}
           <div className="flex gap-4">
@@ -508,7 +517,7 @@ export default function ProjectBoardPage() {
                             <Avatar className="h-6 w-6">
                               <AvatarImage src={task.assignee.image || undefined} />
                               <AvatarFallback className="text-xs bg-blue-100 text-blue-800">
-                                {task.assignee.name?.slice(0, 2).toUpperCase()}
+                                {task.assignee.name?.slice(0, 1).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             <span>{task.assignee.name}</span>
@@ -535,7 +544,7 @@ export default function ProjectBoardPage() {
           </Card>
         </TabsContent>
 
-        {/* Calendar Tab */}
+        {/* 日历标签页 */}
         <TabsContent value="calendar" className="flex-1">
           <div className="flex gap-6 h-full">
             {/* 左侧：日历 + 选中日期任务 */}
@@ -619,7 +628,7 @@ export default function ProjectBoardPage() {
                 ) : (
                   <div className="space-y-3">
                     {selectedDateTasks.map((task) => {
-                      // Determine bar color based on priority (default to yellow/gold for medium/default)
+                      // 根据优先级确定条形颜色（中等/默认默认为黄色/金色）
                       let barColor = "bg-yellow-400";
                       if (task.priority === 'HIGH') barColor = "bg-red-500";
                       if (task.priority === 'LOW') barColor = "bg-green-500";
@@ -759,12 +768,12 @@ export default function ProjectBoardPage() {
           </div>
         </TabsContent>
 
-        {/* Analytics Tab */}
+        {/* 分析标签页 */}
         <TabsContent value="analytics" className="flex-1 overflow-y-auto">
           <ProjectAnalytics tasks={tasks} project={project} isLoading={tasksLoading} />
         </TabsContent>
 
-        {/* Settings Tab */}
+        {/* 设置标签页 */}
         <TabsContent value="settings" className="flex-1 overflow-y-auto">
           <ProjectSettings project={project} />
         </TabsContent>

@@ -257,7 +257,7 @@ export function ProjectAnalytics({ tasks, project, isLoading }: ProjectAnalytics
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <BarChart data={stats.statusData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis
@@ -294,7 +294,7 @@ export function ProjectAnalytics({ tasks, project, isLoading }: ProjectAnalytics
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <PieChart>
                   <Pie
                     data={stats.typeData}

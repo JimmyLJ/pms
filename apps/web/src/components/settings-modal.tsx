@@ -56,17 +56,17 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     }
 
     try {
-      // In a real app, upload to a storage service (S3/R2/UploadThing) here
-      // For now, we will assume the backend handles it or we'd convert to base64 if supported, 
-      // OR we use a hypothetical upload endpoint. 
-      // Given we lack a clear upload endpoint, we'll mark this as pending integration 
-      // OR try to use authClient if it has specific image handling (usually updateUser takes a URL).
+      // 在真实应用中，此处应上传到存储服务（如 S3/R2/UploadThing）
+      // 目前我们假设后端处理它，或者如果支持则转换为 base64，
+      // 或者使用假设的上传端点。
+      // 鉴于缺少明确的上传端点，我们标记为待集成
+      // 或者尝试使用 authClient（如果它有特定的图像处理功能，通常 updateUser 接受 URL）。
 
-      // Let's assume we need to upload first. 
-      // Implementation Placeholder: 
-      toast.error("Backend upload endpoint missing. Please implement file upload.")
+      // 假设我们需要先上传。
+      // 实现占位符：
+      toast.error("后端上传端点缺失。请实现文件上传。")
 
-      // Example of what it WOULD look like:
+      // 示例代码：
       // const formData = new FormData()
       // formData.append('file', file)
       // const res = await fetch('/api/upload', { method: 'POST', body: formData })
@@ -105,7 +105,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
       } else {
         toast.success("个人资料已更新")
         setIsEditingProfile(false)
-        // Optimistically update session or rely on re-fetch if handled by authClient
+        // 优化更新会话，或依赖 authClient 的重新获取
       }
     } catch (e) {
       toast.error("发生错误，请重试")
@@ -118,7 +118,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] p-0 gap-0 overflow-hidden h-[600px]">
         <div className="flex h-full">
-          {/* Sidebar */}
+          {/* 侧边栏 */}
           <div className="w-[240px] border-r bg-muted/10 p-6 flex flex-col gap-6">
             <div>
               <h2 className="text-xl font-bold mb-1">账号</h2>
@@ -155,14 +155,14 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
           </div>
 
-          {/* Content */}
+          {/* 内容 */}
           <div className="flex-1 p-8 overflow-y-auto">
             {activeTab === "profile" && (
               <div className="space-y-8">
                 <div>
                   <h3 className="text-lg font-semibold mb-6">个人资料详情</h3>
 
-                  {/* Profile Section */}
+                  {/* 个人资料部分 */}
                   <div className="py-4 border-b border-border/40">
                     {!isEditingProfile ? (
                       <div className="flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
@@ -240,7 +240,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                     )}
                   </div>
 
-                  {/* Email Section */}
+                  {/* 邮箱部分 */}
                   <div className="py-4 border-b border-border/40">
                     {!isEditingEmail ? (
                       <div className="flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
@@ -331,7 +331,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                 <div>
                   <h3 className="text-lg font-semibold mb-6">安全</h3>
 
-                  {/* Password Section */}
+                  {/* 密码部分 */}
                   <div className="flex items-center justify-between py-4 border-b border-border/40">
                     <span className="text-sm font-medium w-40">密码</span>
                     <div className="flex-1">
@@ -339,7 +339,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                     </div>
                   </div>
 
-                  {/* Active Devices Section */}
+                  {/* 活动设备部分 */}
                   <div className="flex items-start justify-between py-4 border-b border-border/40">
                     <span className="text-sm font-medium w-40 pt-1">活动设备</span>
                     <div className="flex-1">
@@ -379,9 +379,6 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                       )}
                     </div>
                   </div>
-
-
-
                 </div>
               </div>
             )}

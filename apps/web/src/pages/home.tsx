@@ -12,16 +12,16 @@ export default function HomePage() {
   const { data: organizations, isLoading: isOrgsPending } = useQuery({
     queryKey: ["organizations"],
     queryFn: () => authClient.organization.list().then((res) => res.data),
-    enabled: !!session // Only fetch if user is logged in
+    enabled: !!session // 仅在用户登录时获取
   })
 
   useEffect(() => {
-    console.log("Home Effect Debug:", { 
-      isPending, 
-      isOrgsPending, 
-      hasSession: !!session, 
+    console.log("Home Effect Debug:", {
+      isPending,
+      isOrgsPending,
+      hasSession: !!session,
       activeOrgId: session?.session?.activeOrganizationId,
-      orgsCount: organizations?.length 
+      orgsCount: organizations?.length
     });
 
     if (isPending || isOrgsPending) return
@@ -57,7 +57,7 @@ export default function HomePage() {
           </div>
         )}
       </header>
-      
+
       {session ? (
         <div className="space-y-8">
           <section className="bg-card p-6 rounded-lg border shadow-sm">

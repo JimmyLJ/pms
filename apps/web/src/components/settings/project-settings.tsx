@@ -101,7 +101,7 @@ export function ProjectSettings({ project }: ProjectSettingsProps) {
 
   return (
     <div className="flex gap-6 h-full">
-      {/* Project Details */}
+      {/* 项目详情 */}
       <Card className="flex-1">
         <CardContent className="p-6 space-y-6">
           <h3 className="text-lg font-semibold">项目详情</h3>
@@ -272,7 +272,7 @@ export function ProjectSettings({ project }: ProjectSettingsProps) {
         </CardContent>
       </Card>
 
-      {/* Team Members */}
+      {/* 团队成员 */}
       <Card className="w-[400px]">
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-6">

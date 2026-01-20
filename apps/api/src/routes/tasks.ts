@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { db } from "../db";
 import { tasks, user } from "../db/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 import { auth } from "../lib/auth";
 
 const app = new Hono()
@@ -10,7 +10,17 @@ const app = new Hono()
     if (!session) return c.json({ error: "Unauthorized" }, 401);
 
     const projectId = c.req.query("projectId");
-    if (!projectId) return c.json({ error: "Missing projectId" }, 400);
+    const assigneeId = c.req.query("assigneeId");
+    const workspaceId = c.req.query("workspaceId");
+
+    if (!projectId && !assigneeId) {
+      return c.json({ error: "Missing filter parameters (projectId or assigneeId)" }, 400);
+    }
+
+    const conditions = [];
+    if (projectId) conditions.push(eq(tasks.projectId, projectId));
+    if (assigneeId) conditions.push(eq(tasks.assigneeId, assigneeId));
+    if (workspaceId) conditions.push(eq(tasks.organizationId, workspaceId));
 
     const rows = await db
       .select({
@@ -32,7 +42,7 @@ const app = new Hono()
       })
       .from(tasks)
       .leftJoin(user, eq(tasks.assigneeId, user.id))
-      .where(eq(tasks.projectId, projectId))
+      .where(and(...conditions))
       .orderBy(asc(tasks.position));
 
     const data = rows.map((row) => ({
@@ -51,10 +61,10 @@ const app = new Hono()
       updatedAt: row.updatedAt,
       assignee: row.assigneeId
         ? {
-            id: row.assigneeId,
-            name: row.assigneeName,
-            image: row.assigneeImage,
-          }
+          id: row.assigneeId,
+          name: row.assigneeName,
+          image: row.assigneeImage,
+        }
         : null,
     }));
 
@@ -92,7 +102,7 @@ const app = new Hono()
         status: status || "TODO",
         type: type || undefined,
         priority: priority || undefined,
-        position: 0, 
+        position: 0,
         assigneeId: typeof assigneeId === "string" ? assigneeId : null,
         dueDate: dueDate ? new Date(dueDate) : null,
         createdAt: new Date(),
