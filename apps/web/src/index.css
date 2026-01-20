@@ -56,6 +56,18 @@
       height: 0;
     }
   }
+
+  --animate-shine: shine 0.75s ease-in-out infinite;
+
+  @keyframes shine {
+    from {
+      left: -100%;
+    }
+
+    to {
+      left: 200%;
+    }
+  }
 }
 
 :root {
