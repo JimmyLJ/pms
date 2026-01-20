@@ -4,6 +4,7 @@ import { auth } from "./lib/auth"
 import projectsRouter from "./routes/projects"
 import tasksRouter from "./routes/tasks"
 import analyticsRouter from "./routes/analytics"
+import searchRouter from "./routes/search"
 
 const app = new Hono()
 
@@ -12,6 +13,7 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 app.route("/api/projects", projectsRouter)
 app.route("/api/tasks", tasksRouter)
 app.route("/api/analytics", analyticsRouter)
+app.route("/api/search", searchRouter)
 
 app.get('/', (c) => {
   return c.json({

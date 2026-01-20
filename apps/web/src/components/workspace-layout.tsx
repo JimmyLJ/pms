@@ -2,8 +2,7 @@ import { useEffect, useState } from "react"
 import { Outlet, useNavigate, useParams } from "react-router-dom"
 import { Sidebar } from "./sidebar"
 import { authClient } from "@/lib/auth-client"
-import { Search, Moon, Sun } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useTheme } from "@/lib/theme"
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Settings, LogOut } from "lucide-react"
 import { SettingsModal } from "./settings-modal"
+import { Search } from "./search"
 
 export default function WorkspaceLayout() {
   const { workspaceId } = useParams()
@@ -48,16 +48,7 @@ export default function WorkspaceLayout() {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 border-b px-6 flex items-center justify-between bg-background sticky top-0 z-10">
-          <div className="w-96">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="搜索项目、任务..."
-                className="w-full bg-background pl-9 md:w-[300px] lg:w-[400px]"
-              />
-            </div>
-          </div>
+          <Search />
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"

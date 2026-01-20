@@ -48,6 +48,15 @@ export function CreateProjectModal({ children }: { children: React.ReactNode }) 
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  // 获取工作区列表
+  const { data: organizations } = useQuery({
+    queryKey: ["organizations"],
+    queryFn: () => authClient.organization.list().then((res) => res.data),
+    enabled: !!workspaceId,
+  });
+  const currentOrg = organizations?.find((org) => org.id === workspaceId);
+
   const { data: membersData, isLoading: membersLoading } = useQuery({
     queryKey: ["members", workspaceId],
     queryFn: async () => {
@@ -144,7 +153,9 @@ export function CreateProjectModal({ children }: { children: React.ReactNode }) 
             <DialogTitle className="text-xl">创建新项目</DialogTitle>
             <DialogDescription className="text-left">
               所在工作区：
-              <span className="text-blue-600"> {workspaceId || "未选择"}</span>
+              <span className="text-blue-600 font-medium">
+                {currentOrg?.name || "加载中..."}
+              </span>
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-5 py-4">

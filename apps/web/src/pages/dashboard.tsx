@@ -292,7 +292,7 @@ export default function DashboardPage() {
                 </div>
                 <h3 className="text-lg font-medium text-muted-foreground mb-4">暂无项目</h3>
                 <CreateProjectModal>
-                  <Button className="bg-blue-600 hover:bg-blue-700">创建您的第一个项目</Button>
+                  <Button className="bg-blue-600 hover:bg-blue-700 cursor-pointer">创建您的第一个项目</Button>
                 </CreateProjectModal>
               </CardContent>
             )}
