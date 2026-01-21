@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import { useParams, Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import { apiFetch } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreateProjectModal } from "@/components/create-project-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Plus, Folder, Search, ChevronDown, Loader2 } from "lucide-react";
+import { Plus, Folder, Search, ChevronDown, Loader2, MoreVertical, Trash2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -16,7 +17,16 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface Project {
   id: string;
@@ -78,7 +88,13 @@ export default function ProjectsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
 
+  // 删除项目相关状态
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+
   const { ref, inView } = useInView();
+  const queryClient = useQueryClient();
 
   const {
     data,
@@ -107,6 +123,43 @@ export default function ProjectsPage() {
       fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // 删除项目 mutation
+  const { mutate: deleteProject, isPending: isDeleting } = useMutation({
+    mutationFn: async (projectId: string) => {
+      return apiFetch(`/api/projects/${projectId}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast.success("项目已删除");
+      setDeleteDialogOpen(false);
+      setProjectToDelete(null);
+      setDeleteConfirmName("");
+      queryClient.invalidateQueries({ queryKey: ["projects", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ["sidebar-projects"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "删除失败");
+    },
+  });
+
+  const handleDeleteClick = (e: React.MouseEvent, project: Project) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setProjectToDelete(project);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (projectToDelete && deleteConfirmName === projectToDelete.name) {
+      deleteProject(projectToDelete.id);
+    }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setProjectToDelete(null);
+    setDeleteConfirmName("");
+  };
 
   if (error) return <div className="text-destructive">Error loading projects</div>;
 
@@ -244,9 +297,33 @@ export default function ProjectsPage() {
 
               return (
                 <Link key={project.id} to={`/w/${workspaceId}/projects/${project.id}`}>
-                  <Card className="hover:border-primary transition-colors cursor-pointer h-full shadow-sm">
+                  <Card className="group hover:border-primary transition-colors cursor-pointer h-full shadow-sm relative">
+                    {/* 操作菜单 */}
+                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:bg-muted"
+                            onClick={(e) => e.preventDefault()}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                            onClick={(e) => handleDeleteClick(e, project)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            删除项目
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                     <CardContent className="space-y-4 p-5">
-                      <div className="space-y-1">
+                      <div className="space-y-1 pr-8">
                         <div className="text-base font-semibold">{project.name}</div>
                         <div className="text-sm text-muted-foreground">
                           {project.description || "暂无描述"}
@@ -299,6 +376,67 @@ export default function ProjectsPage() {
           )}
         </>
       )}
+
+      {/* 删除确认对话框 */}
+      <Dialog open={deleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              删除项目
+            </DialogTitle>
+            <DialogDescription>
+              此操作不可撤销，请谨慎操作。
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+              <p className="text-sm text-red-800">
+                删除项目「{projectToDelete?.name}」将同时删除所有相关的任务和成员关联。
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                请输入项目名称 <span className="font-semibold text-foreground">{projectToDelete?.name}</span> 以确认删除：
+              </p>
+              <Input
+                value={deleteConfirmName}
+                onChange={(e) => setDeleteConfirmName(e.target.value)}
+                placeholder="输入项目名称"
+                className="w-full"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              onClick={handleCloseDeleteDialog}
+              disabled={isDeleting}
+              className="cursor-pointer"
+            >
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleteConfirmName !== projectToDelete?.name || isDeleting}
+              className="cursor-pointer"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  删除中...
+                </>
+              ) : (
+                "确认删除"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
