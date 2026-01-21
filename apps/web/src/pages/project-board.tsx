@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
 import {
   ArrowLeft,
   Zap,
@@ -17,9 +18,19 @@ import {
   ChevronRight,
   Clock,
   User,
+  Trash2,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api-client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -159,6 +170,10 @@ export default function ProjectBoardPage() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [assigneeFilter, setAssigneeFilter] = useState("all");
 
+  // 删除任务相关状态
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+
   // 日历状态
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -177,6 +192,39 @@ export default function ProjectBoardPage() {
 
   const updateTaskStatus = (taskId: string, status: string) => {
     updateStatusMutation.mutate({ taskId, status });
+  };
+
+  // 删除任务 mutation
+  const { mutate: deleteTask, isPending: isDeleting } = useMutation({
+    mutationFn: async (taskId: string) => {
+      return apiFetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast.success("任务已删除");
+      setDeleteDialogOpen(false);
+      setTaskToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["my-tasks"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "删除失败");
+    },
+  });
+
+  const handleDeleteClick = (task: Task) => {
+    setTaskToDelete(task);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (taskToDelete) {
+      deleteTask(taskToDelete.id);
+    }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setTaskToDelete(null);
   };
 
   // 获取项目信息
@@ -447,19 +495,20 @@ export default function ProjectBoardPage() {
                   <TableHead>状态</TableHead>
                   <TableHead>负责人</TableHead>
                   <TableHead>截止日期</TableHead>
+                  <TableHead className="w-16">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tasksLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={8} className="text-center py-8">
                       <Skeleton className="h-4 w-48 mx-auto" />
                     </TableCell>
                   </TableRow>
                 ) : filteredTasks.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className="text-center py-8 text-muted-foreground"
                     >
                       没有找到符合筛选条件的任务
@@ -534,6 +583,16 @@ export default function ProjectBoardPage() {
                         ) : (
                           "-"
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                          onClick={() => handleDeleteClick(task)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -777,6 +836,53 @@ export default function ProjectBoardPage() {
           <ProjectSettings project={project} />
         </TabsContent>
       </Tabs>
+
+      {/* 删除任务确认对话框 */}
+      <Dialog open={deleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              删除任务
+            </DialogTitle>
+            <DialogDescription>
+              此操作不可撤销。
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-sm">
+              确定要删除任务「<span className="font-semibold">{taskToDelete?.title}</span>」吗？
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              onClick={handleCloseDeleteDialog}
+              disabled={isDeleting}
+              className="cursor-pointer"
+            >
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="cursor-pointer"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  删除中...
+                </>
+              ) : (
+                "确认删除"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

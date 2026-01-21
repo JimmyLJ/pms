@@ -49,7 +49,7 @@ interface ProjectSettingsProps {
 export function ProjectSettings({ project }: ProjectSettingsProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("active");
+  const [status, setStatus] = useState("planning");
   const [priority, setPriority] = useState("MEDIUM");
   const [progress, setProgress] = useState(0);
   const [startDate, setStartDate] = useState<Date | undefined>();
@@ -91,7 +91,7 @@ export function ProjectSettings({ project }: ProjectSettingsProps) {
     if (project) {
       setName(project.name || "");
       setDescription(project.description || "");
-      setStatus((project.status || "active").toLowerCase());
+      setStatus((project.status || "planning").toLowerCase());
       setPriority((project.priority || "MEDIUM").toUpperCase());
       setProgress(project.progress || 0);
       setStartDate(project.startDate ? new Date(project.startDate) : undefined);
@@ -134,9 +134,11 @@ export function ProjectSettings({ project }: ProjectSettingsProps) {
                     <SelectValue placeholder="选择状态" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="planning">规划中</SelectItem>
                     <SelectItem value="active">进行中</SelectItem>
                     <SelectItem value="completed">已完成</SelectItem>
                     <SelectItem value="on_hold">暂停</SelectItem>
+                    <SelectItem value="cancelled">已取消</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
