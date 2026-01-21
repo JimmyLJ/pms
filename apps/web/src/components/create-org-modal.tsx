@@ -12,14 +12,42 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "react-hot-toast";
-import { Upload } from "lucide-react";
+import { ImageUpload } from "@/components/image-upload"; // Import ImageUpload
 
-export function CreateOrganizationModal({ children }: { children: React.ReactNode }) {
+interface CreateOrganizationModalProps {
+  children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function CreateOrganizationModal({
+  children,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
+}: CreateOrganizationModalProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [logo, setLogo] = useState(""); // Add logo state
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isControlled && setControlledOpen) {
+      setControlledOpen(isOpen);
+    } else {
+      setInternalOpen(isOpen);
+    }
+
+    if (!isOpen) {
+      setName("");
+      setSlug("");
+      setLogo(""); // Reset logo state
+    }
+  };
 
   const handleCreate = async () => {
     if (!name || !slug) return;
@@ -27,29 +55,25 @@ export function CreateOrganizationModal({ children }: { children: React.ReactNod
     const { data, error } = await authClient.organization.create({
       name,
       slug,
+      logo, // Pass logo to API
     });
     setLoading(false);
     if (error) {
       toast.error(error.message || "创建失败");
     } else if (data) {
       toast.success("工作区创建成功！");
-      setOpen(false);
+      handleOpenChange(false);
       setName("");
       setSlug("");
+      setLogo(""); // Reset logo state
       await authClient.organization.setActive({ organizationId: data.id });
       navigate(`/w/${data.id}`);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen);
-      if (!isOpen) {
-        setName("");
-        setSlug("");
-      }
-    }}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>创建工作区</DialogTitle>
@@ -59,13 +83,14 @@ export function CreateOrganizationModal({ children }: { children: React.ReactNod
           <div className="grid gap-2">
             <Label>Logo</Label>
             <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-16 h-16 border-2 border-dashed rounded-lg text-muted-foreground">
-                <Upload className="h-6 w-6" />
-              </div>
+              <ImageUpload
+                value={logo}
+                onChange={(url) => setLogo(url)}
+              />
               <div>
-                <Button variant="outline" size="sm" disabled>
-                  上传
-                </Button>
+                <p className="text-sm font-medium">
+                  工作区图标
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   推荐尺寸 1:1，最大 10MB
                 </p>
@@ -82,7 +107,6 @@ export function CreateOrganizationModal({ children }: { children: React.ReactNod
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
-                setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
               }}
             />
           </div>

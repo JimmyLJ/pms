@@ -43,6 +43,27 @@ export default function HomePage() {
 
   if (isPending || isOrgsPending) return <div className="p-10 text-center">Loading...</div>
 
+  // If logged in but no organizations, show the create workspace modal
+  if (session && organizations && organizations.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+        <CreateOrganizationModal open={true} onOpenChange={() => { }}>
+          {/* Placeholder trigger to satisfy conditional rendering if needed, though strictly not needed with open=true */}
+          <div />
+        </CreateOrganizationModal>
+        <div className="mt-8 text-center text-muted-foreground">
+          <p>Please create a workspace to continue.</p>
+          <Button variant="link" className="mt-2" onClick={async () => {
+            await authClient.signOut()
+            navigate("/sign-in")
+          }}>
+            Sign Out
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-10 max-w-4xl mx-auto">
       <header className="flex justify-between items-center mb-10 border-b pb-6">
@@ -68,6 +89,8 @@ export default function HomePage() {
               </CreateOrganizationModal>
             </div>
 
+            {/* This case (organizations.length === 0) should be handled above, 
+                but keeping fallback or for transition states */}
             {!organizations || organizations.length === 0 ? (
               <div className="text-center py-10 border-2 border-dashed rounded-lg">
                 <p className="text-muted-foreground mb-4">You don't have any workspaces yet.</p>

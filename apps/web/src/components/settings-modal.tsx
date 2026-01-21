@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { User, ShieldCheck, Laptop, Smartphone, Loader2 } from "lucide-react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "react-hot-toast"
+import { ImageUpload } from "@/components/image-upload"
 
 interface SettingsModalProps {
   open: boolean
@@ -25,7 +26,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [editingEmail, setEditingEmail] = useState("")
   const [activeSessions, setActiveSessions] = useState<any[]>([])
   const [isLoadingSessions, setIsLoadingSessions] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [newAvatarUrl, setNewAvatarUrl] = useState("")
 
   useEffect(() => {
     if (activeTab === "security") {
@@ -46,36 +47,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     }
   }, [activeTab])
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB")
-      return
-    }
-
-    try {
-      // 在真实应用中，此处应上传到存储服务（如 S3/R2/UploadThing）
-      // 目前我们假设后端处理它，或者如果支持则转换为 base64，
-      // 或者使用假设的上传端点。
-      // 鉴于缺少明确的上传端点，我们标记为待集成
-      // 或者尝试使用 authClient（如果它有特定的图像处理功能，通常 updateUser 接受 URL）。
-
-      // 假设我们需要先上传。
-      // 实现占位符：
-      toast.error("后端上传端点缺失。请实现文件上传。")
-
-      // 示例代码：
-      // const formData = new FormData()
-      // formData.append('file', file)
-      // const res = await fetch('/api/upload', { method: 'POST', body: formData })
-      // const { url } = await res.json()
-      // await authClient.updateUser({ image: url })
-    } catch (error) {
-      toast.error("Upload failed")
-    }
-  }
 
   const handleAvatarRemove = async () => {
     try {
@@ -97,7 +69,8 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     try {
       const fullName = name.trim()
       const { error } = await authClient.updateUser({
-        name: fullName
+        name: fullName,
+        image: newAvatarUrl || undefined, // Only update if new image is set
       })
 
       if (error) {
@@ -204,15 +177,20 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                                 </Avatar>
                                 <div className="flex flex-col gap-1">
                                   <div className="flex items-center gap-2">
-                                    <input
-                                      type="file"
-                                      ref={fileInputRef}
-                                      className="hidden"
-                                      accept="image/*"
-                                      onChange={handleAvatarUpload}
+                                    <ImageUpload
+                                      value={newAvatarUrl || session?.user.image}
+                                      onChange={(url) => setNewAvatarUrl(url)}
                                     />
-                                    <Button variant="outline" size="sm" className="h-8 cursor-pointer" onClick={() => fileInputRef.current?.click()}>上传</Button>
-                                    <Button variant="ghost" size="sm" className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer" onClick={handleAvatarRemove}>移除</Button>
+                                    <div className="flex flex-col gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer w-fit"
+                                        onClick={handleAvatarRemove}
+                                      >
+                                        移除头像
+                                      </Button>
+                                    </div>
                                   </div>
                                   <p className="text-xs text-muted-foreground">推荐尺寸 1:1，最大 10MB。</p>
                                 </div>

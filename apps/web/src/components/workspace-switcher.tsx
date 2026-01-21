@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
 import { CreateOrganizationModal } from "./create-org-modal"
 import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export function WorkspaceSwitcher() {
   const { data: session } = authClient.useSession()
@@ -30,8 +31,6 @@ export function WorkspaceSwitcher() {
   const activeOrgId = workspaceId || session?.session.activeOrganizationId
   const activeOrg = organizations?.find((org) => org.id === activeOrgId)
   const totalWorkspaces = organizations?.length ?? 0
-  const fallbackImage =
-    "https://images.unsplash.com/photo-1616469829941-c7200edec809?q=80&w=2670&auto=format&fit=crop"
 
   return (
     <DropdownMenu>
@@ -44,7 +43,6 @@ export function WorkspaceSwitcher() {
           <ActiveWorkspaceDisplay
             activeOrg={activeOrg}
             totalWorkspaces={totalWorkspaces}
-            fallbackImage={fallbackImage}
           />
           <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground/50" />
         </Button>
@@ -69,11 +67,12 @@ export function WorkspaceSwitcher() {
               {org.slug === "new-org" ? (
                 <span className="text-xs font-semibold">NO</span>
               ) : (
-                <img
-                  src={org.logo || fallbackImage}
-                  alt={`${org.name} logo`}
-                  className="h-full w-full object-cover"
-                />
+                <Avatar className="h-full w-full rounded-md">
+                  <AvatarImage src={org.logo || undefined} alt={org.name} className="object-cover" />
+                  <AvatarFallback className="rounded-md bg-primary/10 text-primary font-medium">
+                    {org.name?.substring(0, 1).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
               )}
             </div>
             <div className="flex flex-1 flex-col">
@@ -107,12 +106,10 @@ export function WorkspaceSwitcher() {
 
 function ActiveWorkspaceDisplay({
   activeOrg,
-  totalWorkspaces,
-  fallbackImage
+  totalWorkspaces
 }: {
   activeOrg?: any
   totalWorkspaces: number
-  fallbackImage: string
 }) {
   const workspaceLabel = `${totalWorkspaces} 个工作区`
   return (
@@ -121,11 +118,12 @@ function ActiveWorkspaceDisplay({
         {activeOrg?.slug === "new-org" ? (
           <span className="text-xs font-semibold">NO</span>
         ) : (
-          <img
-            src={activeOrg?.logo || fallbackImage}
-            alt="logo"
-            className="h-full w-full object-cover"
-          />
+          <Avatar className="h-full w-full rounded-lg">
+            <AvatarImage src={activeOrg?.logo || undefined} alt="logo" className="object-cover" />
+            <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold">
+              {activeOrg?.name?.substring(0, 1).toUpperCase() || "W"}
+            </AvatarFallback>
+          </Avatar>
         )}
       </div>
       <div className="flex flex-col">
