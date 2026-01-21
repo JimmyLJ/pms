@@ -79,7 +79,7 @@ export function Sidebar({ className }: SidebarProps) {
             <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
             <button
               onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full text-left"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground w-full text-left cursor-pointer"
             >
               <Settings className="h-4 w-4" />
               设置
@@ -92,7 +92,7 @@ export function Sidebar({ className }: SidebarProps) {
             <button
               onClick={() => setIsTasksOpen(!isTasksOpen)}
               className={cn(
-                "w-full flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground",
+                "w-full flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground cursor-pointer",
                 // Check if we are on my-tasks route? For now just keep it simple or use NavLink for the text only.
               )}
             >
@@ -143,7 +143,7 @@ export function Sidebar({ className }: SidebarProps) {
         <div className="px-3 py-2">
           <button
             onClick={() => setIsProjectsOpen(!isProjectsOpen)}
-            className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <Folder className="h-4 w-4" />
@@ -172,7 +172,7 @@ export function Sidebar({ className }: SidebarProps) {
                     <button
                       onClick={() => toggleProject(project.id)}
                       className={cn(
-                        "w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground",
+                        "w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground cursor-pointer",
                       )}
                     >
                       {isExpanded ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export default function MembersPage() {
           <h2 className="text-2xl font-bold tracking-tight">团队</h2>
           <p className="text-muted-foreground">管理团队成员及其贡献</p>
         </div>
-        <Button className="bg-blue-500 hover:bg-blue-600">
+        <Button className="bg-blue-500 hover:bg-blue-600 cursor-pointer" onClick={() => toast("测试项目，暂时无法邀请成员", { icon: "ℹ️" })}>
           <UserPlus className="mr-2 h-4 w-4" />
           邀请成员
         </Button>
@@ -107,11 +108,10 @@ export default function MembersPage() {
                   {member.user.email}
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    member.role === "owner"
-                      ? "bg-purple-100 text-purple-600"
-                      : "bg-gray-100 text-gray-600"
-                  }`}>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${member.role === "owner"
+                    ? "bg-purple-100 text-purple-600"
+                    : "bg-gray-100 text-gray-600"
+                    }`}>
                     {member.role === "owner" ? "管理员" : "成员"}
                   </span>
                 </td>
