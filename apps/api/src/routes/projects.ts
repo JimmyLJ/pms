@@ -3,6 +3,7 @@ import { db } from "../db";
 import { projects, projectMembers, user } from "../db/schema";
 import { eq, desc, lt, and, sql, inArray } from "drizzle-orm";
 import { auth } from "../lib/auth";
+import { requireOrgRole, requireProjectAccess, isOrgAdmin } from "../lib/permissions";
 
 const app = new Hono()
   .get("/:projectId", async (c) => {
@@ -11,6 +12,9 @@ const app = new Hono()
 
     const projectId = c.req.param("projectId");
     if (!projectId) return c.json({ error: "Missing projectId" }, 400);
+
+    // 权限检查：需要 project:view 权限
+    await requireProjectAccess(session.user.id, projectId, "view");
 
     // 获取项目信息
     const [project] = await db
@@ -48,11 +52,36 @@ const app = new Hono()
     const workspaceId = c.req.query("workspaceId");
     if (!workspaceId) return c.json({ error: "Missing workspaceId" }, 400);
 
+    // 权限检查：需要是组织成员
+    await requireOrgRole(session.user.id, workspaceId, "member");
+
     const limit = parseInt(c.req.query("limit") || "30");
     const cursor = c.req.query("cursor");
 
+    // 检查用户是否是 admin+，决定是否需要过滤项目
+    const isAdmin = await isOrgAdmin(session.user.id, workspaceId);
+
     // 构建查询条件
     const conditions = [eq(projects.organizationId, workspaceId)];
+
+    // 如果不是 admin，只能看到自己参与的项目
+    if (!isAdmin) {
+      // 获取用户参与的项目 ID 列表
+      const userProjects = await db
+        .select({ projectId: projectMembers.projectId })
+        .from(projectMembers)
+        .where(eq(projectMembers.userId, session.user.id));
+
+      const userProjectIds = userProjects.map(p => p.projectId);
+
+      if (userProjectIds.length === 0) {
+        // 用户没有参与任何项目，返回空列表
+        return c.json({ data: [], hasMore: false, nextCursor: null });
+      }
+
+      conditions.push(inArray(projects.id, userProjectIds));
+    }
+
     if (cursor) {
       // 使用 createdAt 作为游标，需要获取游标对应记录的 createdAt
       const [cursorProject] = await db
@@ -90,6 +119,9 @@ const app = new Hono()
 
     const { name, description, status, priority, startDate, endDate, leadId, memberIds, workspaceId } = await c.req.json();
     if (!name || !workspaceId) return c.json({ error: "Missing fields" }, 400);
+
+    // 权限检查：需要 org:admin+ 才能创建项目
+    await requireOrgRole(session.user.id, workspaceId, "admin");
 
     const [newProject] = await db
       .insert(projects)
@@ -132,6 +164,10 @@ const app = new Hono()
     if (!session) return c.json({ error: "Unauthorized" }, 401);
 
     const projectId = c.req.param("projectId");
+
+    // 权限检查：需要 project:edit 权限（org:admin+ 或 project:lead）
+    await requireProjectAccess(session.user.id, projectId, "edit");
+
     const updates = await c.req.json();
 
     // Remove immutable fields or validate as needed
@@ -153,6 +189,20 @@ const app = new Hono()
       .returning();
 
     return c.json({ data: updatedProject });
+  })
+  .delete("/:projectId", async (c) => {
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (!session) return c.json({ error: "Unauthorized" }, 401);
+
+    const projectId = c.req.param("projectId");
+
+    // 权限检查：需要 project:admin 权限（org:admin+ 或 project:lead）
+    await requireProjectAccess(session.user.id, projectId, "admin");
+
+    // 删除项目（关联的 projectMembers 和 tasks 会通过 onDelete: 'cascade' 自动删除）
+    await db.delete(projects).where(eq(projects.id, projectId));
+
+    return c.json({ success: true });
   });
 
 export default app;
