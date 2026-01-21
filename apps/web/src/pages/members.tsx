@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { toast } from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -8,10 +7,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { authClient } from "@/lib/auth-client";
 import { UserPlus, Users, TrendingUp, CheckCircle, Search } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function MembersPage() {
   const { workspaceId } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
+
 
   // 获取组织成员
   const { data: membersData } = useQuery({
@@ -46,7 +47,7 @@ export default function MembersPage() {
           <h2 className="text-2xl font-bold tracking-tight">团队</h2>
           <p className="text-muted-foreground">管理团队成员及其贡献</p>
         </div>
-        <Button className="bg-blue-500 hover:bg-blue-600 cursor-pointer" onClick={() => toast("测试项目，暂时无法邀请成员", { icon: "ℹ️" })}>
+        <Button className="bg-blue-500 hover:bg-blue-600 cursor-pointer" onClick={() => toast.error("测试项目，邀请功能暂不开放")}>
           <UserPlus className="mr-2 h-4 w-4" />
           邀请成员
         </Button>
