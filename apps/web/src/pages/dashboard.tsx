@@ -231,8 +231,8 @@ export default function DashboardPage() {
                   const progressValue = Math.max(0, Math.min(100, Number(project.progress ?? 0)));
                   const memberCount = project.memberCount ?? 1;
                   const dueDate = project.dueDate
-                    ? new Date(project.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                    : new Date(project.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    ? new Date(project.dueDate).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', year: 'numeric' })
+                    : new Date(project.createdAt).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', year: 'numeric' });
 
                   return (
                     <Link

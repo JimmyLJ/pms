@@ -32,6 +32,16 @@ const app = new Hono()
       return c.json({ error: "Organization not found" }, 404);
     }
 
+    // 检查用户是否只有一个工作区（不允许删除最后一个工作区）
+    const userOrgs = await db
+      .select({ count: sql<number>`cast(count(*) as int)` })
+      .from(member)
+      .where(eq(member.userId, session.user.id));
+
+    if (userOrgs[0]?.count <= 1) {
+      return c.json({ error: "Cannot delete your only workspace" }, 400);
+    }
+
     // 删除工作区（级联删除会自动处理关联数据）
     // 由于 schema 中配置了 onDelete: 'cascade'，以下数据会自动删除：
     // - member（组织成员）

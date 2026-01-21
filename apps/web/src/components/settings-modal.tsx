@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react"
-import { User, ShieldCheck, Laptop, Smartphone, Loader2 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { User, ShieldCheck, Laptop, Smartphone, Loader2, Building, Trash2, AlertTriangle } from "lucide-react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth-client"
+import { apiFetch } from "@/lib/api-client"
 import { toast } from "react-hot-toast"
 import { ImageUpload } from "@/components/image-upload"
 
@@ -13,12 +17,19 @@ interface SettingsModalProps {
   onOpenChange: (open: boolean) => void
 }
 
-type Tab = "profile" | "security"
+type Tab = "profile" | "security" | "workspace"
+
+interface WorkspaceStats {
+  organization: { id: string; name: string }
+  stats: { members: number; projects: number; tasks: number }
+}
 
 export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<Tab>("profile")
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const { data: session } = authClient.useSession()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const [name, setName] = useState("")
   const [isSaving, setIsSaving] = useState(false)
@@ -27,6 +38,43 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [activeSessions, setActiveSessions] = useState<any[]>([])
   const [isLoadingSessions, setIsLoadingSessions] = useState(false)
   const [newAvatarUrl, setNewAvatarUrl] = useState("")
+
+  // 工作区删除相关状态
+  const [deleteConfirmName, setDeleteConfirmName] = useState("")
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const workspaceId = session?.session?.activeOrganizationId
+
+  // 获取工作区信息
+  const { data: orgData } = useQuery({
+    queryKey: ["organization", workspaceId],
+    queryFn: async () => {
+      const { data } = await authClient.organization.getFullOrganization({
+        query: { organizationId: workspaceId },
+      })
+      return data
+    },
+    enabled: !!workspaceId && activeTab === "workspace",
+  })
+
+  // 获取工作区统计信息
+  const { data: statsData, isLoading: isLoadingStats } = useQuery({
+    queryKey: ["workspace-stats", workspaceId],
+    queryFn: async () => {
+      const res = await apiFetch<{ data: WorkspaceStats }>(
+        `/api/organizations/${workspaceId}/stats`
+      )
+      return res.data
+    },
+    enabled: !!workspaceId && activeTab === "workspace",
+  })
+
+  // 获取当前用户在工作区的角色
+  const currentMember = orgData?.members?.find(
+    (m) => m.userId === session?.user.id
+  )
+  const isOwner = currentMember?.role === "owner"
+  const stats = statsData?.stats
 
   useEffect(() => {
     if (activeTab === "security") {
@@ -47,11 +95,9 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     }
   }, [activeTab])
 
-
-
   const handleAvatarRemove = async () => {
     try {
-      await authClient.updateUser({ image: null }) // or "" depending on API
+      await authClient.updateUser({ image: null })
       toast.success("Avatar removed")
     } catch (e) {
       toast.error("Failed to remove avatar")
@@ -70,7 +116,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
       const fullName = name.trim()
       const { error } = await authClient.updateUser({
         name: fullName,
-        image: newAvatarUrl || undefined, // Only update if new image is set
+        image: newAvatarUrl || undefined,
       })
 
       if (error) {
@@ -78,7 +124,6 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
       } else {
         toast.success("个人资料已更新")
         setIsEditingProfile(false)
-        // 优化更新会话，或依赖 authClient 的重新获取
       }
     } catch (e) {
       toast.error("发生错误，请重试")
@@ -87,6 +132,53 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     }
   }
 
+  const handleDeleteWorkspace = async () => {
+    if (deleteConfirmName !== orgData?.name) return
+
+    setIsDeleting(true)
+    try {
+      const res = await apiFetch<{ success?: boolean; error?: string }>(
+        `/api/organizations/${workspaceId}`,
+        { method: "DELETE" }
+      )
+
+      if (res.error) {
+        if (res.error === "Cannot delete your only workspace") {
+          toast.error("无法删除唯一的工作区")
+        } else {
+          toast.error(res.error)
+        }
+        return
+      }
+
+      toast.success("工作区已删除")
+      onOpenChange(false)
+
+      // 刷新组织列表
+      await queryClient.invalidateQueries({ queryKey: ["organizations"] })
+
+      // 获取用户的其他工作区并跳转
+      const { data: orgs } = await authClient.organization.list()
+      if (orgs && orgs.length > 0) {
+        await authClient.organization.setActive({ organizationId: orgs[0].id })
+        navigate(`/w/${orgs[0].id}`)
+      } else {
+        navigate("/onboarding")
+      }
+    } catch (error) {
+      toast.error("删除失败，请重试")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  // 切换 Tab 时重置删除确认输入
+  useEffect(() => {
+    if (activeTab !== "workspace") {
+      setDeleteConfirmName("")
+    }
+  }, [activeTab])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] p-0 gap-0 overflow-hidden h-[600px]">
@@ -94,8 +186,8 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
           {/* 侧边栏 */}
           <div className="w-[240px] border-r bg-muted/10 p-6 flex flex-col gap-6">
             <div>
-              <h2 className="text-xl font-bold mb-1">账号</h2>
-              <p className="text-xs text-muted-foreground">管理您的账号信息。</p>
+              <h2 className="text-xl font-bold mb-1">设置</h2>
+              <p className="text-xs text-muted-foreground">管理账号和工作区设置</p>
             </div>
 
             <nav className="space-y-1">
@@ -123,9 +215,19 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                 <ShieldCheck className="h-4 w-4" />
                 安全
               </button>
+              <button
+                onClick={() => setActiveTab("workspace")}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer",
+                  activeTab === "workspace"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                )}
+              >
+                <Building className="h-4 w-4" />
+                工作区
+              </button>
             </nav>
-
-
           </div>
 
           {/* 内容 */}
@@ -298,8 +400,6 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                       </div>
                     )}
                   </div>
-
-
                 </div>
               </div>
             )}
@@ -360,11 +460,125 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                 </div>
               </div>
             )}
+
+            {activeTab === "workspace" && (
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-lg font-semibold mb-6">工作区设置</h3>
+
+                  {/* 工作区基本信息 */}
+                  <div className="py-4 border-b border-border/40">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium w-40">基本信息</span>
+                      <div className="flex-1 flex items-center gap-4">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={orgData?.logo || undefined} />
+                          <AvatarFallback className="bg-blue-500 text-white">
+                            {orgData?.name?.charAt(0) || "W"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{orgData?.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {orgData?.slug ? `@${orgData.slug}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 工作区统计 */}
+                  <div className="py-4 border-b border-border/40">
+                    <div className="flex items-start justify-between">
+                      <span className="text-sm font-medium w-40 pt-1">统计数据</span>
+                      <div className="flex-1 grid grid-cols-3 gap-4">
+                        <div className="text-center p-3 rounded-lg bg-muted/30">
+                          <p className="text-2xl font-bold">{orgData?.members?.length || 0}</p>
+                          <p className="text-xs text-muted-foreground">成员</p>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-muted/30">
+                          <p className="text-2xl font-bold">{stats?.projects || 0}</p>
+                          <p className="text-xs text-muted-foreground">项目</p>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-muted/30">
+                          <p className="text-2xl font-bold">{stats?.tasks || 0}</p>
+                          <p className="text-xs text-muted-foreground">任务</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 危险操作 - 仅 owner 可见 */}
+                  {isOwner && (
+                    <div className="py-4">
+                      <div className="flex items-start justify-between">
+                        <span className="text-sm font-medium w-40 pt-1 text-red-600">危险操作</span>
+                        <div className="flex-1 border border-red-200 rounded-lg p-4 bg-red-50/50 space-y-4">
+                          <div className="flex items-start gap-3">
+                            <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
+                            <div className="space-y-1">
+                              <p className="font-medium text-red-800">删除工作区</p>
+                              <p className="text-sm text-red-600">
+                                删除后，所有项目、任务和成员数据将被永久删除，此操作不可撤销。
+                              </p>
+                            </div>
+                          </div>
+
+                          {isLoadingStats ? (
+                            <div className="flex items-center justify-center py-2">
+                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : (
+                            <div className="space-y-3 pt-2">
+                              <p className="text-sm text-muted-foreground">
+                                请输入工作区名称 <span className="font-semibold text-foreground">{orgData?.name}</span> 以确认删除：
+                              </p>
+                              <Input
+                                value={deleteConfirmName}
+                                onChange={(e) => setDeleteConfirmName(e.target.value)}
+                                placeholder="输入工作区名称"
+                                className="max-w-sm"
+                              />
+                              <Button
+                                variant="destructive"
+                                onClick={handleDeleteWorkspace}
+                                disabled={deleteConfirmName !== orgData?.name || isDeleting}
+                                className="cursor-pointer"
+                              >
+                                {isDeleting ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    删除中...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    确认删除工作区
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 非 owner 提示 */}
+                  {!isOwner && currentMember && (
+                    <div className="py-4">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <ShieldCheck className="h-4 w-4" />
+                        <span>只有工作区所有者可以修改工作区设置</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
     </Dialog>
   )
 }
-
-
