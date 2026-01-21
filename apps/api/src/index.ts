@@ -7,6 +7,7 @@ import tasksRouter from "./routes/tasks"
 import analyticsRouter from "./routes/analytics"
 import searchRouter from "./routes/search"
 import uploadsRouter from "./routes/uploads"
+import organizationsRouter from "./routes/organizations"
 
 import { cors } from 'hono/cors'
 
@@ -33,6 +34,7 @@ app.route("/api/tasks", tasksRouter)
 app.route("/api/analytics", analyticsRouter)
 app.route("/api/search", searchRouter)
 app.route("/api/uploads", uploadsRouter)
+app.route("/api/organizations", organizationsRouter)
 
 app.get('/', (c) => {
   return c.json({

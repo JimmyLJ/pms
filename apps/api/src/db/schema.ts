@@ -60,15 +60,15 @@ export const organization = pgTable("organization", {
 
 export const member = pgTable("member", {
   id: text("id").primaryKey(),
-  organizationId: text("organizationId").notNull().references(() => organization.id),
-  userId: text("userId").notNull().references(() => user.id),
+  organizationId: text("organizationId").notNull().references(() => organization.id, { onDelete: 'cascade' }),
+  userId: text("userId").notNull().references(() => user.id, { onDelete: 'cascade' }),
   role: text("role").notNull(), // 'admin', 'member', 'owner'
   createdAt: timestamp("createdAt").notNull(),
 });
 
 export const invitation = pgTable("invitation", {
   id: text("id").primaryKey(),
-  organizationId: text("organizationId").notNull().references(() => organization.id),
+  organizationId: text("organizationId").notNull().references(() => organization.id, { onDelete: 'cascade' }),
   email: text("email").notNull(),
   role: text("role"),
   status: text("status").notNull(),

@@ -33,25 +33,25 @@ export default function SignInPage() {
     <div className="flex items-center justify-center min-h-screen bg-muted/40">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Enter your email below to login to your account.</CardDescription>
+          <CardTitle className="text-2xl">登录</CardTitle>
+          <CardDescription>请输入您的邮箱以登录您的账号。</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">邮箱</Label>
             <Input id="email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">密码</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button className="w-full" onClick={handleSignIn} disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "登录中..." : "登录"}
           </Button>
           <p className="text-sm text-center text-muted-foreground">
-            Don't have an account? <Link to="/sign-up" className="text-primary hover:underline">Sign Up</Link>
+            还没有账号？ <Link to="/sign-up" className="text-primary hover:underline">注册</Link>
           </p>
         </CardFooter>
       </Card>

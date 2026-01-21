@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Toaster } from "react-hot-toast"
 import { ThemeProvider } from "./lib/theme"
-import HomePage from "./pages/home"
+import RootRedirect from "./components/root-redirect"
+import OnboardingPage from "./pages/onboarding"
 import SignInPage from "./pages/sign-in"
 import SignUpPage from "./pages/sign-up"
 import WorkspaceLayout from "./components/workspace-layout"
@@ -16,7 +17,8 @@ export default function App() {
       <BrowserRouter>
         <Toaster position="top-center" reverseOrder={false} />
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/sign-in" element={<SignInPage />} />
           <Route path="/sign-up" element={<SignUpPage />} />
 

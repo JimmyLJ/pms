@@ -35,29 +35,29 @@ export default function SignUpPage() {
     <div className="flex items-center justify-center min-h-screen bg-muted/40">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Enter your details to get started.</CardDescription>
+          <CardTitle className="text-2xl">创建账号</CardTitle>
+          <CardDescription>输入您的详细信息以开始使用。</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} />
+            <Label htmlFor="name">姓名</Label>
+            <Input id="name" placeholder="请输入您的姓名" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">邮箱</Label>
             <Input id="email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">密码</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button className="w-full" onClick={handleSignUp} disabled={loading}>
-            {loading ? "Creating..." : "Sign Up"}
+            {loading ? "创建中..." : "注册"}
           </Button>
           <p className="text-sm text-center text-muted-foreground">
-            Already have an account? <Link to="/sign-in" className="text-primary hover:underline">Sign In</Link>
+            已经有账号？ <Link to="/sign-in" className="text-primary hover:underline">登录</Link>
           </p>
         </CardFooter>
       </Card>

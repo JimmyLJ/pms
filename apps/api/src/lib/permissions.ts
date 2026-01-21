@@ -154,6 +154,22 @@ export async function isOrgAdmin(userId: string, orgId: string): Promise<boolean
 }
 
 /**
+ * 检查用户是否是组织的 owner
+ * @throws HTTPException 403 如果不是 owner
+ */
+export async function requireOrgOwner(userId: string, orgId: string): Promise<void> {
+  const role = await getOrgRole(userId, orgId);
+
+  if (!role) {
+    throw new HTTPException(403, { message: "Not a member of this organization" });
+  }
+
+  if (role !== "owner") {
+    throw new HTTPException(403, { message: "Only organization owner can perform this action" });
+  }
+}
+
+/**
  * 检查用户是否有权限访问指定项目（view 级别）
  * 用于过滤列表结果
  */

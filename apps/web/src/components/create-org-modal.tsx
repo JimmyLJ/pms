@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "react-hot-toast";
-import { ImageUpload } from "@/components/image-upload"; // Import ImageUpload
+import { ImageUpload } from "@/components/image-upload";
 
 interface CreateOrganizationModalProps {
   children?: React.ReactNode;
@@ -28,9 +29,10 @@ export function CreateOrganizationModal({
   const [internalOpen, setInternalOpen] = useState(false);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
-  const [logo, setLogo] = useState(""); // Add logo state
+  const [logo, setLogo] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -65,8 +67,9 @@ export function CreateOrganizationModal({
       handleOpenChange(false);
       setName("");
       setSlug("");
-      setLogo(""); // Reset logo state
+      setLogo("");
       await authClient.organization.setActive({ organizationId: data.id });
+      await queryClient.invalidateQueries({ queryKey: ["organizations"] });
       navigate(`/w/${data.id}`);
     }
   };
