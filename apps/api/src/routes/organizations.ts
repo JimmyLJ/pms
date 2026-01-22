@@ -4,6 +4,8 @@ import { organization, member, projects, tasks, projectMembers, user } from "../
 import { eq, sql, and } from "drizzle-orm";
 import { auth } from "../lib/auth";
 import { requireOrgOwner, requireOrgRole } from "../lib/permissions";
+import { validateBodyWithError } from "../lib/validate";
+import { addOrgMemberSchema } from "../lib/validators";
 
 const app = new Hono()
   /**
@@ -120,8 +122,9 @@ const app = new Hono()
     const orgId = c.req.param("orgId");
     if (!orgId) return c.json({ error: "Missing orgId" }, 400);
 
-    const { userId, role = "member" } = await c.req.json();
-    if (!userId) return c.json({ error: "Missing userId" }, 400);
+    const { data: body, error } = await validateBodyWithError(c, addOrgMemberSchema);
+    if (error) return c.json(error, 400);
+    const { userId, role } = body;
 
     // 权限检查：需要 admin 权限
     await requireOrgRole(session.user.id, orgId, "admin");
@@ -166,7 +169,7 @@ const app = new Hono()
         id: crypto.randomUUID(),
         organizationId: orgId,
         userId,
-        role: role === "admin" ? "admin" : "member",
+        role: role,
         createdAt: new Date(),
       })
       .returning();

@@ -11,30 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { CreateProjectModal } from "@/components/create-project-modal";
 import { cn } from "@/lib/utils";
 
-interface Project {
-  id: string;
-  name: string;
-  description: string | null;
-  status: string | null;
-  priority: string | null;
-  progress: number | null;
-  createdAt: string;
-  dueDate: string | null;
-  memberCount?: number;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  type?: string;
-  status?: string;
-  dueDate?: string;
-  createdAt: string;
-  assignee?: {
-    name?: string;
-    image?: string;
-  };
-}
+import { Project, Task } from "@/types";
 
 interface DashboardData {
   counts: {
@@ -160,7 +137,7 @@ export default function DashboardPage() {
     }
   ];
 
-  const MiniTaskList = ({ tasks, emptyMessage }: { tasks: any[], emptyMessage: string }) => {
+  const MiniTaskList = ({ tasks, emptyMessage }: { tasks: Task[], emptyMessage: string }) => {
     if (!tasks || tasks.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-4 text-center">
@@ -307,7 +284,7 @@ export default function DashboardPage() {
             <CardContent className="p-0">
               {lists.recentActivity.length > 0 ? (
                 <div className="divide-y">
-                  {lists.recentActivity.map((task: any) => {
+                  {lists.recentActivity.map((task: Task) => {
                     // Determine Type Info
                     let TypeIcon = CheckSquare;
                     let typeColor = "text-green-600";
@@ -354,7 +331,7 @@ export default function DashboardPage() {
                               <span>{typeLabel}</span>
                               <div className="flex items-center gap-1.5 ml-1">
                                 <Avatar className="h-4 w-4">
-                                  <AvatarImage src={task.assignee?.image} />
+                                  <AvatarImage src={task.assignee?.image || undefined} />
                                   <AvatarFallback className="text-[9px]">{task.assignee?.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <span>{task.assignee?.name || "未分配"}</span>

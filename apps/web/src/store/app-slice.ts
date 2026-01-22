@@ -1,14 +1,14 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 const initialState = {
-  activeWorkspaceId: null,
+  activeWorkspaceId: null as string | null,
 }
 
 export const appSlice = createSlice({
   name: 'app',
   initialState,
   reducers: {
-    setActiveWorkspaceId: (state, action) => {
+    setActiveWorkspaceId: (state, action: PayloadAction<string | null>) => {
       state.activeWorkspaceId = action.payload
     },
   },

@@ -4,6 +4,8 @@ import { user, projects, projectMembers, member } from "../db/schema";
 import { eq, desc, lt, and, sql, inArray, notInArray } from "drizzle-orm";
 import { auth } from "../lib/auth";
 import { requireOrgRole, requireProjectAccess, isOrgAdmin } from "../lib/permissions";
+import { validateBodyWithError } from "../lib/validate";
+import { createProjectSchema, updateProjectSchema, addProjectMemberSchema } from "../lib/validators";
 const app = new Hono()
     .get("/:projectId", async (c) => {
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
@@ -91,9 +93,10 @@ const app = new Hono()
     if (!session)
         return c.json({ error: "Unauthorized" }, 401);
     const projectId = c.req.param("projectId");
-    const { userId } = await c.req.json();
-    if (!userId)
-        return c.json({ error: "Missing userId" }, 400);
+    const { data: body, error } = await validateBodyWithError(c, addProjectMemberSchema);
+    if (error)
+        return c.json(error, 400);
+    const { userId } = body;
     // 权限检查：需要 project:edit 权限
     await requireProjectAccess(session.user.id, projectId, "edit");
     // 检查用户是否已经是项目成员
@@ -203,9 +206,10 @@ const app = new Hono()
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session)
         return c.json({ error: "Unauthorized" }, 401);
-    const { name, description, status, priority, startDate, endDate, leadId, memberIds, workspaceId } = await c.req.json();
-    if (!name || !workspaceId)
-        return c.json({ error: "Missing fields" }, 400);
+    const { data: body, error } = await validateBodyWithError(c, createProjectSchema);
+    if (error)
+        return c.json(error, 400);
+    const { name, description, status, priority, startDate, endDate, leadId, memberIds, workspaceId } = body;
     // 权限检查：需要 org:admin+ 才能创建项目
     await requireOrgRole(session.user.id, workspaceId, "admin");
     const [newProject] = await db
@@ -247,22 +251,18 @@ const app = new Hono()
     const projectId = c.req.param("projectId");
     // 权限检查：需要 project:edit 权限（org:admin+ 或 project:lead）
     await requireProjectAccess(session.user.id, projectId, "edit");
-    const updates = await c.req.json();
-    // Remove immutable fields or validate as needed
-    delete updates.id;
-    delete updates.createdAt;
-    delete updates.updatedAt;
-    delete updates.organizationId; // Usually shouldn't change organization
+    const { data: updates, error } = await validateBodyWithError(c, updateProjectSchema);
+    if (error)
+        return c.json(error, 400);
+    // 准备更新对象，排除 undefined 值
+    const updateData = { ...updates, updatedAt: new Date() };
     if (updates.startDate)
-        updates.startDate = new Date(updates.startDate);
+        updateData.startDate = new Date(updates.startDate);
     if (updates.endDate)
-        updates.endDate = new Date(updates.endDate);
+        updateData.endDate = new Date(updates.endDate);
     const [updatedProject] = await db
         .update(projects)
-        .set({
-        ...updates,
-        updatedAt: new Date(),
-    })
+        .set(updateData)
         .where(eq(projects.id, projectId))
         .returning();
     return c.json({ data: updatedProject });

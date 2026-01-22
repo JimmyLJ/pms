@@ -13,12 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { apiFetch } from "@/lib/api-client";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-}
+import { User, AddMemberResponse } from "@/types";
 
 interface AddMemberModalProps {
   workspaceId: string;
@@ -63,14 +58,14 @@ export function AddMemberModal({
     return () => clearTimeout(debounce);
   }, [searchQuery, workspaceId]);
 
-  const handleAddMember = async (userId: string) => {
-    setAddingUserId(userId);
+  const handleAddMember = async (user: User) => {
+    setAddingUserId(user.id);
     try {
-      const res = await apiFetch<{ data?: any; error?: string }>(
+      const res = await apiFetch<{ data?: AddMemberResponse; error?: string }>(
         `/api/organizations/${workspaceId}/members`,
         {
           method: "POST",
-          body: JSON.stringify({ userId, role: "member" }),
+          body: JSON.stringify({ userId: user.id, role: "member" }),
         }
       );
 
@@ -81,7 +76,7 @@ export function AddMemberModal({
 
       toast.success("成员添加成功");
       // 从搜索结果中移除已添加的用户
-      setSearchResults((prev) => prev.filter((u) => u.id !== userId));
+      setSearchResults((prev) => prev.filter((u) => u.id !== user.id));
       // 刷新成员列表
       queryClient.invalidateQueries({ queryKey: ["members", workspaceId] });
     } catch (error) {
@@ -158,7 +153,7 @@ export function AddMemberModal({
                     </div>
                     <Button
                       size="sm"
-                      onClick={() => handleAddMember(user.id)}
+                      onClick={() => handleAddMember(user)}
                       disabled={addingUserId === user.id}
                       className="bg-blue-500 hover:bg-blue-600 cursor-pointer"
                     >

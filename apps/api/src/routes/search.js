@@ -4,14 +4,16 @@ import { projects, tasks, projectMembers } from "../db/schema";
 import { ilike, eq, desc, and, inArray } from "drizzle-orm";
 import { auth } from "../lib/auth";
 import { requireOrgRole, isOrgAdmin } from "../lib/permissions";
+import { validateQueryWithError } from "../lib/validate";
+import { searchQuerySchema } from "../lib/validators";
 const app = new Hono().get("/search", async (c) => {
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session)
         return c.json({ error: "Unauthorized" }, 401);
-    const workspaceId = c.req.query("workspaceId");
-    const q = c.req.query("q");
-    if (!workspaceId)
-        return c.json({ error: "Missing workspaceId" }, 400);
+    const { data: query, error } = validateQueryWithError(c, searchQuerySchema);
+    if (error)
+        return c.json(error, 400);
+    const { workspaceId, q } = query;
     if (!q || q.trim().length === 0) {
         return c.json({ projects: [], tasks: [] });
     }

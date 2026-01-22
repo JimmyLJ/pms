@@ -4,6 +4,8 @@ import { user, member } from "../db/schema";
 import { ilike, eq, and, notInArray, or } from "drizzle-orm";
 import { auth } from "../lib/auth";
 import { requireOrgRole } from "../lib/permissions";
+import { validateQueryWithError } from "../lib/validate";
+import { userSearchQuerySchema } from "../lib/validators";
 const app = new Hono()
     /**
      * 搜索用户（排除已是指定工作区成员的用户）
@@ -12,10 +14,10 @@ const app = new Hono()
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session)
         return c.json({ error: "Unauthorized" }, 401);
-    const q = c.req.query("q");
-    const workspaceId = c.req.query("workspaceId");
-    if (!workspaceId)
-        return c.json({ error: "Missing workspaceId" }, 400);
+    const { data: query, error } = validateQueryWithError(c, userSearchQuerySchema);
+    if (error)
+        return c.json(error, 400);
+    const { q, workspaceId } = query;
     if (!q || q.trim().length === 0) {
         return c.json({ data: [] });
     }

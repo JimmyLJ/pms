@@ -33,24 +33,7 @@ import { apiFetch } from "@/lib/api-client";
 
 import { AddProjectMemberModal } from "@/components/add-project-member-modal";
 
-interface ProjectMember {
-  id: string;
-  name: string;
-  image: string | null;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  status: string | null;
-  description: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  priority?: string | null;
-  progress?: number | null;
-  members?: ProjectMember[];
-  leadId?: string | null;
-}
+import { Project, ProjectMember, UpdateProjectPayload } from "@/types";
 
 interface ProjectSettingsProps {
   project: Project | undefined;
@@ -94,7 +77,7 @@ export function ProjectSettings({ project }: ProjectSettingsProps) {
   });
 
   const { mutate: updateProject, isPending } = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: UpdateProjectPayload) => {
       if (!project?.id) throw new Error("Missing project ID");
       return apiFetch(`/api/projects/${project.id}`, {
         method: "PATCH",
@@ -118,8 +101,8 @@ export function ProjectSettings({ project }: ProjectSettingsProps) {
       status,
       priority,
       progress,
-      startDate: startDate ? startDate.toISOString() : null,
-      endDate: endDate ? endDate.toISOString() : null,
+      startDate: startDate ? startDate.toISOString() : undefined,
+      endDate: endDate ? endDate.toISOString() : undefined,
     });
   };
 

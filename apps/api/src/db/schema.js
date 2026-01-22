@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, boolean, integer } from "drizzle-orm/pg-core";
-// --- Auth Tables (Better-Auth Standard) ---
+// --- 认证表 (Better-Auth 标准) ---
 export const user = pgTable("user", {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
@@ -41,7 +41,7 @@ export const verification = pgTable("verification", {
     createdAt: timestamp("createdAt"),
     updatedAt: timestamp("updatedAt"),
 });
-// --- Organization Plugin Tables ---
+// --- 组织插件表 ---
 export const organization = pgTable("organization", {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
@@ -54,7 +54,7 @@ export const member = pgTable("member", {
     id: text("id").primaryKey(),
     organizationId: text("organizationId").notNull().references(() => organization.id, { onDelete: 'cascade' }),
     userId: text("userId").notNull().references(() => user.id, { onDelete: 'cascade' }),
-    role: text("role").notNull(), // 'admin', 'member', 'owner'
+    role: text("role").notNull(), // 'admin' (管理员), 'member' (成员), 'owner' (所有者)
     createdAt: timestamp("createdAt").notNull(),
 });
 export const invitation = pgTable("invitation", {
@@ -66,7 +66,7 @@ export const invitation = pgTable("invitation", {
     expiresAt: timestamp("expiresAt").notNull(),
     inviterId: text("inviterId").notNull().references(() => user.id),
 });
-// --- Business Tables ---
+// --- 业务表 ---
 export const projects = pgTable("project", {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
@@ -91,9 +91,9 @@ export const tasks = pgTable("task", {
     id: text("id").primaryKey(),
     title: text("title").notNull(),
     description: text("description"),
-    status: text("status").notNull(), // 'TODO', 'IN_PROGRESS', 'DONE', etc.
-    type: text("type"), // 'TASK', 'BUG', 'FEATURE', 'IMPROVEMENT', 'OTHER'
-    priority: text("priority").default("medium"), // 'LOW', 'MEDIUM', 'HIGH'
+    status: text("status").notNull(), // 'TODO' (待办), 'IN_PROGRESS' (进行中), 'DONE' (已完成) 等
+    type: text("type"), // 'TASK' (任务), 'BUG' (缺陷), 'FEATURE' (特性), 'IMPROVEMENT' (改进), 'OTHER' (其他)
+    priority: text("priority").default("medium"), // 'LOW' (低), 'MEDIUM' (中), 'HIGH' (高)
     position: integer("position").notNull().default(0),
     projectId: text("projectId").notNull().references(() => projects.id, { onDelete: 'cascade' }),
     organizationId: text("organizationId").notNull().references(() => organization.id, { onDelete: 'cascade' }),

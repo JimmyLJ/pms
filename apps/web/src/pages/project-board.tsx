@@ -56,38 +56,7 @@ import { CreateTaskModal } from "@/components/kanban/create-task-modal";
 import { ProjectAnalytics } from "@/components/analytics/project-analytics";
 import { ProjectSettings } from "@/components/settings/project-settings";
 
-interface ProjectMember {
-  id: string;
-  name: string;
-  image: string | null;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  status: string | null;
-  description: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  priority?: string | null;
-  progress?: number | null;
-  members?: ProjectMember[];
-}
-
-interface Task {
-  id: string;
-  title: string;
-  type: string | null;
-  priority: string | null;
-  status: string;
-  dueDate: string | null;
-  assigneeId: string | null;
-  assignee?: {
-    id: string;
-    name: string;
-    image: string | null;
-  } | null;
-}
+import { Project, Task } from "@/types";
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   planning: { label: "规划中", className: "bg-gray-100 text-gray-800 hover:bg-gray-100" },
@@ -100,9 +69,9 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
 
 
 const PRIORITY_MAP: Record<string, { label: string; className: string }> = {
-  HIGH: { label: "高", className: "bg-green-100 text-green-700 hover:bg-green-100" },
-  MEDIUM: { label: "中", className: "bg-blue-100 text-blue-700 hover:bg-blue-100" },
-  LOW: { label: "低", className: "bg-pink-100 text-pink-700 hover:bg-pink-100" },
+  high: { label: "高", className: "bg-green-100 text-green-700 hover:bg-green-100" },
+  medium: { label: "中", className: "bg-blue-100 text-blue-700 hover:bg-blue-100" },
+  low: { label: "低", className: "bg-pink-100 text-pink-700 hover:bg-pink-100" },
 };
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; icon: typeof Zap }> = {
@@ -465,9 +434,9 @@ export default function ProjectBoardPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部优先级</SelectItem>
-                <SelectItem value="LOW">低</SelectItem>
-                <SelectItem value="MEDIUM">中</SelectItem>
-                <SelectItem value="HIGH">高</SelectItem>
+                <SelectItem value="low">低</SelectItem>
+                <SelectItem value="medium">中</SelectItem>
+                <SelectItem value="high">高</SelectItem>
               </SelectContent>
             </Select>
 
@@ -688,9 +657,9 @@ export default function ProjectBoardPage() {
                     {selectedDateTasks.map((task) => {
                       // 根据优先级确定条形颜色（中等/默认默认为黄色/金色）
                       let barColor = "bg-yellow-400";
-                      if (task.priority === 'HIGH') barColor = "bg-red-500";
-                      if (task.priority === 'LOW') barColor = "bg-green-500";
-                      if (task.priority === 'MEDIUM') barColor = "bg-yellow-400";
+                      if (task.priority === 'high') barColor = "bg-red-500";
+                      if (task.priority === 'low') barColor = "bg-green-500";
+                      if (task.priority === 'medium') barColor = "bg-yellow-400";
 
                       const typeConfig = task.type ? TYPE_CONFIG[task.type] : null;
                       let badgeClass = "bg-gray-100 text-gray-700";

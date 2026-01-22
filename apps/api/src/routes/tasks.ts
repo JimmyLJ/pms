@@ -4,6 +4,8 @@ import { tasks, user, projectMembers, projects } from "../db/schema";
 import { eq, asc, and, inArray } from "drizzle-orm";
 import { auth } from "../lib/auth";
 import { requireProjectAccess, isOrgAdmin } from "../lib/permissions";
+import { validateBodyWithError } from "../lib/validate";
+import { createTaskSchema, updateTaskSchema } from "../lib/validators";
 
 /**
  * 获取任务所属的项目 ID
@@ -126,6 +128,8 @@ const app = new Hono()
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) return c.json({ error: "Unauthorized" }, 401);
 
+    const { data: body, error } = await validateBodyWithError(c, createTaskSchema);
+    if (error) return c.json(error, 400);
     const {
       title,
       description,
@@ -136,8 +140,7 @@ const app = new Hono()
       priority,
       dueDate,
       assigneeId,
-    } = await c.req.json();
-    if (!title || !projectId || !workspaceId) return c.json({ error: "Missing fields" }, 400);
+    } = body;
 
     // 权限检查：需要 project:view 权限（项目成员可以创建任务）
     await requireProjectAccess(session.user.id, projectId, "view");
@@ -178,20 +181,16 @@ const app = new Hono()
     // 权限检查：需要 project:view 权限（项目成员可以编辑任务）
     await requireProjectAccess(session.user.id, projectId, "view");
 
-    const updates = await c.req.json();
+    const { data: updates, error } = await validateBodyWithError(c, updateTaskSchema);
+    if (error) return c.json(error, 400);
 
-    // 防止修改不可变字段
-    delete updates.id;
-    delete updates.projectId;
-    delete updates.organizationId;
-    delete updates.createdAt;
+    // 准备此数据的副本，以便修改
+    const updateData: Record<string, unknown> = { ...updates, updatedAt: new Date() };
+    if (updates.dueDate) updateData.dueDate = updates.dueDate ? new Date(updates.dueDate) : null;
 
     const [updatedTask] = await db
       .update(tasks)
-      .set({
-        ...updates,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(tasks.id, taskId))
       .returning();
 

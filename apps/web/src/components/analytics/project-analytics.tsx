@@ -18,37 +18,8 @@ import {
   Cell,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface ProjectMember {
-  id: string;
-  name: string;
-  image: string | null;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  status: string | null;
-  description: string | null;
-  members?: ProjectMember[];
-}
-
-interface Task {
-  id: string;
-  title: string;
-  type: string | null;
-  priority: string | null;
-  status: string;
-  dueDate: string | null;
-  assigneeId: string | null;
-  assignee?: {
-    id: string;
-    name: string;
-    image: string | null;
-  } | null;
-}
-
 import { Skeleton } from "@/components/ui/skeleton";
+import { Project, Task } from "@/types";
 
 interface ProjectAnalyticsProps {
   tasks: Task[];
@@ -100,9 +71,9 @@ export function ProjectAnalytics({ tasks, project, isLoading }: ProjectAnalytics
 
     // 优先级分布
     const priorityCount = {
-      HIGH: tasks.filter((t) => t.priority === "HIGH").length,
-      MEDIUM: tasks.filter((t) => t.priority === "MEDIUM").length,
-      LOW: tasks.filter((t) => t.priority === "LOW").length,
+      HIGH: tasks.filter((t) => t.priority === "high").length,
+      MEDIUM: tasks.filter((t) => t.priority === "medium").length,
+      LOW: tasks.filter((t) => t.priority === "low").length,
     };
 
     return {

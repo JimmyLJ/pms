@@ -4,8 +4,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,js}"],
     setupFiles: ["./src/test/setup.ts"],
+    fileParallelism: false, // 串行运行测试文件
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

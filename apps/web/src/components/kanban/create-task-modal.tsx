@@ -22,13 +22,14 @@ import {
 import { apiFetch } from "@/lib/api-client";
 import { Calendar, Plus } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { User } from "@/types";
 
-export function CreateTaskModal({ 
-  projectId, 
-  workspaceId, 
-  initialStatus = "TODO" 
-}: { 
-  projectId: string; 
+export function CreateTaskModal({
+  projectId,
+  workspaceId,
+  initialStatus = "TODO"
+}: {
+  projectId: string;
   workspaceId: string;
   initialStatus?: string;
 }) {
@@ -45,7 +46,7 @@ export function CreateTaskModal({
     queryKey: ["project", projectId],
     queryFn: () =>
       apiFetch<{
-        data: { members?: { id: string; name: string | null }[] };
+        data: { members?: User[] };
       }>(`/api/projects/${projectId}`).then((r) => r.data),
     enabled: !!projectId,
   });
@@ -68,11 +69,11 @@ export function CreateTaskModal({
     mutationFn: async () => {
       return apiFetch("/api/tasks", {
         method: "POST",
-        body: JSON.stringify({ 
-          title, 
-          description, 
-          projectId, 
-          workspaceId, 
+        body: JSON.stringify({
+          title,
+          description,
+          projectId,
+          workspaceId,
           status,
           type,
           priority,
@@ -87,7 +88,7 @@ export function CreateTaskModal({
       resetForm();
       toast.success("任务创建成功！");
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message);
     }
   });
