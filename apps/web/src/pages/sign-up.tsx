@@ -1,20 +1,22 @@
 import { useState } from "react";
-import { authClient } from "@/lib/auth-client";
+// import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [loading] = useState(false);
+  // const navigate = useNavigate();
 
   const handleSignUp = async () => {
+    toast.error("测试项目，暂时关闭注册");
+    /*
     setLoading(true);
     const { error } = await authClient.signUp.email({
       email,
@@ -29,6 +31,7 @@ export default function SignUpPage() {
       toast.success("账号创建成功！");
       navigate("/");
     }
+    */
   };
 
   return (

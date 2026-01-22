@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { UserPlus, Loader2, Check } from "lucide-react";
+import { UserPlus, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import {
   Dialog,
@@ -55,7 +55,7 @@ export function AddProjectMemberModal({
     onMutate: (userId) => {
       setAddingIds((prev) => new Set(prev).add(userId));
     },
-    onSuccess: (userId) => {
+    onSuccess: () => {
       toast.success("已添加成员");
       // 刷新项目成员列表
       queryClient.invalidateQueries({ queryKey: ["project", projectId] });

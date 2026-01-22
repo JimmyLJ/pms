@@ -93,11 +93,11 @@ export async function requireOrgRole(
   const role = await getOrgRole(userId, orgId);
 
   if (!role) {
-    throw new HTTPException(403, { message: "Not a member of this organization" });
+    throw new HTTPException(403, { message: "不是该组织的成员" });
   }
 
   if (ORG_ROLE_PRIORITY[role] < ORG_ROLE_PRIORITY[minRole]) {
-    throw new HTTPException(403, { message: `Requires ${minRole} role or higher` });
+    throw new HTTPException(403, { message: `需要 ${minRole} 或更高角色的权限` });
   }
 
   return role;
@@ -117,13 +117,13 @@ export async function requireProjectAccess(
   // 获取项目所属组织
   const orgId = await getProjectOrgId(projectId);
   if (!orgId) {
-    throw new HTTPException(404, { message: "Project not found" });
+    throw new HTTPException(404, { message: "项目未找到" });
   }
 
   // 获取组织角色
   const orgRole = await getOrgRole(userId, orgId);
   if (!orgRole) {
-    throw new HTTPException(403, { message: "Not a member of this organization" });
+    throw new HTTPException(403, { message: "不是该组织的成员" });
   }
 
   // 组织 admin/owner 拥有穿透权限
@@ -134,12 +134,12 @@ export async function requireProjectAccess(
   // 普通成员需要检查项目级权限
   const projectRole = await getProjectRole(userId, projectId);
   if (!projectRole) {
-    throw new HTTPException(403, { message: "Not a member of this project" });
+    throw new HTTPException(403, { message: "不是该项目的成员" });
   }
 
   const minProjectRole = ACCESS_LEVEL_MIN_PROJECT_ROLE[level];
   if (PROJECT_ROLE_PRIORITY[projectRole] < PROJECT_ROLE_PRIORITY[minProjectRole]) {
-    throw new HTTPException(403, { message: `Requires project ${minProjectRole} role or higher` });
+    throw new HTTPException(403, { message: `需要项目 ${minProjectRole} 或更高角色的权限` });
   }
 
   return { orgRole, projectRole };
@@ -161,11 +161,11 @@ export async function requireOrgOwner(userId: string, orgId: string): Promise<vo
   const role = await getOrgRole(userId, orgId);
 
   if (!role) {
-    throw new HTTPException(403, { message: "Not a member of this organization" });
+    throw new HTTPException(403, { message: "不是该组织的成员" });
   }
 
   if (role !== "owner") {
-    throw new HTTPException(403, { message: "Only organization owner can perform this action" });
+    throw new HTTPException(403, { message: "只有组织所有者才能执行此操作" });
   }
 }
 

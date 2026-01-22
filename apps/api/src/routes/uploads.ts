@@ -7,11 +7,11 @@ const app = new Hono();
 
 const UPLOAD_DIR = join(process.cwd(), "uploads");
 
-// Ensure upload directory exists
+// 确保上传目录存在
 try {
   await mkdir(UPLOAD_DIR, { recursive: true });
 } catch (e) {
-  // Ignore if exists
+  // 如果已存在则忽略
 }
 
 app.post("/", async (c) => {
@@ -25,7 +25,7 @@ app.post("/", async (c) => {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = new Uint8Array(arrayBuffer);
 
-  // Simple extension check
+  // 简单的扩展名检查
   const name = file.name;
   const ext = name.split(".").pop();
   const fileName = `${randomUUID()}.${ext}`;
@@ -33,8 +33,8 @@ app.post("/", async (c) => {
 
   await writeFile(filePath, buffer);
 
-  // Construct URL - assuming API is served at localhost:3000
-  // and we mount static files at /uploads
+  // 构建 URL - 假设 API 运行在 localhost:3000
+  // 并且我们将静态文件挂载在 /uploads
   const url = `http://localhost:3000/uploads/${fileName}`;
 
   return c.json({ url });

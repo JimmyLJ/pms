@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { User, ShieldCheck, Laptop, Smartphone, Loader2, Building, Trash2, AlertTriangle } from "lucide-react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -39,6 +39,12 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [isLoadingSessions, setIsLoadingSessions] = useState(false)
   const [newAvatarUrl, setNewAvatarUrl] = useState("")
 
+  // 密码修改相关状态
+  const [isEditingPassword, setIsEditingPassword] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+
   // 工作区删除相关状态
   const [deleteConfirmName, setDeleteConfirmName] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
@@ -50,7 +56,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     queryKey: ["organization", workspaceId],
     queryFn: async () => {
       const { data } = await authClient.organization.getFullOrganization({
-        query: { organizationId: workspaceId },
+        query: { organizationId: workspaceId || undefined },
       })
       return data
     },
@@ -177,7 +183,35 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     if (activeTab !== "workspace") {
       setDeleteConfirmName("")
     }
+    if (activeTab !== "security") {
+      setIsEditingPassword(false)
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+    }
   }, [activeTab])
+
+  // 关闭窗口时重置状态
+  useEffect(() => {
+    if (!open) {
+      const timer = setTimeout(() => {
+        setActiveTab("profile")
+        setIsEditingProfile(false)
+        setIsEditingEmail(false)
+        setIsEditingPassword(false)
+        setEditingEmail("")
+        setDeleteConfirmName("")
+        setNewAvatarUrl("")
+        setCurrentPassword("")
+        setNewPassword("")
+        setConfirmPassword("")
+        if (session?.user.name) {
+          setName(session.user.name)
+        }
+      }, 300) // 延迟重置，避免弹窗关闭动画时内容突然变化
+      return () => clearTimeout(timer)
+    }
+  }, [open, session])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -186,8 +220,8 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
           {/* 侧边栏 */}
           <div className="w-[240px] border-r bg-muted/10 p-6 flex flex-col gap-6">
             <div>
-              <h2 className="text-xl font-bold mb-1">设置</h2>
-              <p className="text-xs text-muted-foreground">管理账号和工作区设置</p>
+              <DialogTitle className="text-xl font-bold mb-1">设置</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">管理账号和工作区设置</DialogDescription>
             </div>
 
             <nav className="space-y-1">
@@ -410,11 +444,114 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                   <h3 className="text-lg font-semibold mb-6">安全</h3>
 
                   {/* 密码部分 */}
-                  <div className="flex items-center justify-between py-4 border-b border-border/40">
-                    <span className="text-sm font-medium w-40">密码</span>
-                    <div className="flex-1">
-                      <Button variant="ghost" size="sm" className="text-xs bg-muted/40 hover:bg-muted/60 cursor-pointer">设置密码</Button>
-                    </div>
+                  {/* 密码部分 */}
+                  <div className="py-4 border-b border-border/40">
+                    {!isEditingPassword ? (
+                      <div className="flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+                        <span className="text-sm font-medium w-40">密码</span>
+                        <div className="flex-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs bg-muted/40 hover:bg-muted/60 cursor-pointer"
+                            onClick={() => setIsEditingPassword(true)}
+                          >
+                            设置密码
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex items-start justify-between">
+                          <span className="text-sm font-medium w-40 pt-1">密码</span>
+                          <div className="flex-1 border rounded-lg p-6 shadow-sm space-y-6">
+                            <div className="space-y-4">
+                              <h4 className="font-semibold text-sm">设置新密码</h4>
+
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">当前密码</label>
+                                <input
+                                  type="password"
+                                  value={currentPassword}
+                                  onChange={(e) => setCurrentPassword(e.target.value)}
+                                  placeholder="输入当前密码"
+                                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">新密码</label>
+                                <input
+                                  type="password"
+                                  value={newPassword}
+                                  onChange={(e) => setNewPassword(e.target.value)}
+                                  placeholder="输入新密码（至少 8 位）"
+                                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">确认新密码</label>
+                                <input
+                                  type="password"
+                                  value={confirmPassword}
+                                  onChange={(e) => setConfirmPassword(e.target.value)}
+                                  placeholder="再次输入新密码"
+                                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" onClick={() => setIsEditingPassword(false)} className="cursor-pointer" disabled={isSaving}>取消</Button>
+                              <Button
+                                className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                                onClick={async () => {
+                                  if (!currentPassword) {
+                                    toast.error("请输入当前密码")
+                                    return
+                                  }
+                                  if (newPassword.length < 8) {
+                                    toast.error("新密码至少需要 8 位")
+                                    return
+                                  }
+                                  if (newPassword !== confirmPassword) {
+                                    toast.error("两次输入的密码不一致")
+                                    return
+                                  }
+
+                                  setIsSaving(true)
+                                  try {
+                                    const { error } = await authClient.changePassword({
+                                      currentPassword,
+                                      newPassword,
+                                      revokeOtherSessions: true,
+                                    })
+
+                                    if (error) {
+                                      toast.error(error.message || "密码修改失败")
+                                    } else {
+                                      toast.success("密码已修改，其他设备已下线")
+                                      setIsEditingPassword(false)
+                                      setCurrentPassword("")
+                                      setNewPassword("")
+                                      setConfirmPassword("")
+                                    }
+                                  } catch (e) {
+                                    toast.error("发生错误，请重试")
+                                  } finally {
+                                    setIsSaving(false)
+                                  }
+                                }}
+                                disabled={isSaving}
+                              >
+                                {isSaving ? "保存中..." : "保存"}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* 活动设备部分 */}

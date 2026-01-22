@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db } from "../db";
-import { webhooks, user, projects, projectMembers, member } from "../db/schema";
+import { user, projects, projectMembers, member } from "../db/schema";
 import { eq, desc, lt, and, sql, inArray, notInArray } from "drizzle-orm";
 import { auth } from "../lib/auth";
 import { requireOrgRole, requireProjectAccess, isOrgAdmin } from "../lib/permissions";
@@ -292,11 +292,11 @@ const app = new Hono()
 
     const updates = await c.req.json();
 
-    // Remove immutable fields or validate as needed
+    // 移除不可变字段或按需验证
     delete updates.id;
     delete updates.createdAt;
     delete updates.updatedAt;
-    delete updates.organizationId; // Usually shouldn't change organization
+    delete updates.organizationId; // 通常不应更改组织
 
     if (updates.startDate) updates.startDate = new Date(updates.startDate);
     if (updates.endDate) updates.endDate = new Date(updates.endDate);

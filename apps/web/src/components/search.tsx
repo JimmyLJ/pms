@@ -4,12 +4,7 @@ import { Input } from "@/components/ui/input";
 import { apiFetch } from "@/lib/api-client";
 import { useNavigate, useParams } from "react-router-dom";
 
-interface SearchResult {
-  id: string;
-  name?: string;
-  title?: string;
-  projectId?: string;
-}
+
 
 interface SearchResponse {
   projects: Array<{ id: string; name: string }>;
@@ -99,7 +94,7 @@ export function Search() {
   };
 
   // 选择结果
-  const handleSelect = (item: { id: string; type: "project" | "task" }) => {
+  const handleSelect = (item: { id: string; type: "project" | "task"; projectId?: string }) => {
     if (item.type === "project") {
       navigate(`/workspace/${workspaceId}/projects/${item.id}`);
     } else {
@@ -153,9 +148,8 @@ export function Search() {
                   <button
                     key={project.id}
                     onClick={() => handleSelect({ ...project, type: "project" })}
-                    className={`w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-accent ${
-                      isSelected ? "bg-accent" : ""
-                    }`}
+                    className={`w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-accent ${isSelected ? "bg-accent" : ""
+                      }`}
                   >
                     <Folder className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <span className="truncate">{project.name}</span>
@@ -178,9 +172,8 @@ export function Search() {
                   <button
                     key={task.id}
                     onClick={() => handleSelect({ ...task, type: "task" })}
-                    className={`w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-accent ${
-                      isSelected ? "bg-accent" : ""
-                    }`}
+                    className={`w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-accent ${isSelected ? "bg-accent" : ""
+                      }`}
                   >
                     <CheckSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <span className="truncate">{task.title}</span>
