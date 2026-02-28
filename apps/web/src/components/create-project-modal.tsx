@@ -36,7 +36,11 @@ import { authClient } from "@/lib/auth-client";
 import { apiFetch } from "@/lib/api-client";
 import { toast } from "react-hot-toast";
 
-export function CreateProjectModal({ children }: { children: React.ReactNode }) {
+export function CreateProjectModal({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { workspaceId } = useParams();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -73,7 +77,7 @@ export function CreateProjectModal({ children }: { children: React.ReactNode }) 
     label: member.user.name || member.user.email || "未命名",
   }));
   const memberLabelMap = new Map(
-    memberOptions.map((member) => [member.id, member.label])
+    memberOptions.map((member) => [member.id, member.label]),
   );
   const mergedMemberIds = leadId
     ? [leadId, ...selectedMemberIds.filter((id) => id !== leadId)]
@@ -129,6 +133,9 @@ export function CreateProjectModal({ children }: { children: React.ReactNode }) 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects", workspaceId] });
+      queryClient.invalidateQueries({
+        queryKey: ["sidebar-projects", workspaceId],
+      });
       queryClient.invalidateQueries({ queryKey: ["analytics", workspaceId] });
       setOpen(false);
       resetForm();
@@ -136,16 +143,19 @@ export function CreateProjectModal({ children }: { children: React.ReactNode }) 
     },
     onError: (err: any) => {
       toast.error(err.message);
-    }
+    },
   });
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => {
-      setOpen(nextOpen);
-      if (!nextOpen) {
-        resetForm();
-      }
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) {
+          resetForm();
+        }
+      }}
+    >
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[520px] overflow-hidden p-0 sm:rounded-l-lg sm:rounded-r-2xl">
         <div className="grid max-h-[calc(100vh-4rem)] gap-6 overflow-y-auto p-8">
@@ -167,6 +177,7 @@ export function CreateProjectModal({ children }: { children: React.ReactNode }) 
                 placeholder="请输入项目名称"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                disabled={mutation.isPending}
               />
             </div>
             <div className="grid gap-2">
@@ -177,12 +188,17 @@ export function CreateProjectModal({ children }: { children: React.ReactNode }) 
                 placeholder="请输入项目描述"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                disabled={mutation.isPending}
               />
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label>状态</Label>
-                <Select value={status} onValueChange={setStatus}>
+                <Select
+                  value={status}
+                  onValueChange={setStatus}
+                  disabled={mutation.isPending}
+                >
                   <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
@@ -197,7 +213,11 @@ export function CreateProjectModal({ children }: { children: React.ReactNode }) 
               </div>
               <div className="grid gap-2">
                 <Label>优先级</Label>
-                <Select value={priority} onValueChange={setPriority}>
+                <Select
+                  value={priority}
+                  onValueChange={setPriority}
+                  disabled={mutation.isPending}
+                >
                   <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
@@ -230,6 +250,7 @@ export function CreateProjectModal({ children }: { children: React.ReactNode }) 
                   }
                   setLeadId(value);
                 }}
+                disabled={mutation.isPending}
               >
                 <SelectTrigger className="h-10">
                   <SelectValue />
@@ -261,6 +282,7 @@ export function CreateProjectModal({ children }: { children: React.ReactNode }) 
                   <Button
                     variant="outline"
                     className="h-10 w-full justify-between"
+                    disabled={mutation.isPending}
                   >
                     <span
                       className={

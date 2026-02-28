@@ -87,6 +87,7 @@ export default function ResetPasswordPage() {
                     autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -99,6 +100,7 @@ export default function ResetPasswordPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleReset()}
+                    disabled={loading}
                   />
                 </div>
                 <Button

@@ -82,6 +82,7 @@ export default function SignUpPage() {
                 autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -93,6 +94,7 @@ export default function SignUpPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -105,6 +107,7 @@ export default function SignUpPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSignUp()}
+                disabled={loading}
               />
             </div>
           </CardContent>

@@ -77,6 +77,7 @@ export default function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                    disabled={loading}
                   />
                 </div>
                 <Button

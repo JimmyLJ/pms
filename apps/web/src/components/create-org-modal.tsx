@@ -86,14 +86,9 @@ export function CreateOrganizationModal({
           <div className="grid gap-2">
             <Label>Logo</Label>
             <div className="flex items-center gap-4">
-              <ImageUpload
-                value={logo}
-                onChange={(url) => setLogo(url)}
-              />
+              <ImageUpload value={logo} onChange={(url) => setLogo(url)} />
               <div>
-                <p className="text-sm font-medium">
-                  工作区图标
-                </p>
+                <p className="text-sm font-medium">工作区图标</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   推荐尺寸 1:1，最大 10MB
                 </p>
@@ -111,6 +106,7 @@ export function CreateOrganizationModal({
               onChange={(e) => {
                 setName(e.target.value);
               }}
+              disabled={loading}
             />
           </div>
 
@@ -122,6 +118,7 @@ export function CreateOrganizationModal({
               placeholder="my-workspace"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
+              disabled={loading}
             />
           </div>
         </div>
