@@ -35,7 +35,7 @@ app.post("/", async (c) => {
 
   // 构建 URL - 假设 API 运行在 localhost:3000
   // 并且我们将静态文件挂载在 /uploads
-  const url = `http://localhost:3000/uploads/${fileName}`;
+  const url = `http://localhost:3100/uploads/${fileName}`;
 
   return c.json({ url });
 });

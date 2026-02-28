@@ -10,7 +10,12 @@ interface ImageUploadProps {
   endpoint?: string;
 }
 
-export function ImageUpload({ value, onChange, className, endpoint = "http://localhost:3000/api/uploads" }: ImageUploadProps) {
+export function ImageUpload({
+  value,
+  onChange,
+  className,
+  endpoint = "http://localhost:3100/api/uploads",
+}: ImageUploadProps) {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

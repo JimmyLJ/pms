@@ -1,15 +1,18 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
-import { Toaster } from "react-hot-toast"
-import { ThemeProvider } from "./lib/theme"
-import RootRedirect from "./components/root-redirect"
-import OnboardingPage from "./pages/onboarding"
-import SignInPage from "./pages/sign-in"
-import SignUpPage from "./pages/sign-up"
-import WorkspaceLayout from "./components/workspace-layout"
-import DashboardPage from "./pages/dashboard"
-import ProjectsPage from "./pages/projects"
-import ProjectBoardPage from "./pages/project-board"
-import MembersPage from "./pages/members"
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import { ThemeProvider } from "./lib/theme";
+import RootRedirect from "./components/root-redirect";
+import OnboardingPage from "./pages/onboarding";
+import SignInPage from "./pages/sign-in";
+import SignUpPage from "./pages/sign-up";
+import VerifyEmailPage from "./pages/verify-email";
+import ForgotPasswordPage from "./pages/forgot-password";
+import ResetPasswordPage from "./pages/reset-password";
+import WorkspaceLayout from "./components/workspace-layout";
+import DashboardPage from "./pages/dashboard";
+import ProjectsPage from "./pages/projects";
+import ProjectBoardPage from "./pages/project-board";
+import MembersPage from "./pages/members";
 
 export default function App() {
   return (
@@ -21,6 +24,9 @@ export default function App() {
           <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/sign-in" element={<SignInPage />} />
           <Route path="/sign-up" element={<SignUpPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Workspace Routes */}
           <Route path="/w/:workspaceId" element={<WorkspaceLayout />}>
@@ -32,5 +38,5 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
-  )
+  );
 }

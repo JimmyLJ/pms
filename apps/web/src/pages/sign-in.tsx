@@ -73,7 +73,7 @@ export default function SignInPage() {
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">密码</Label>
                 <Link
-                  to="#"
+                  to="/forgot-password"
                   className="text-sm font-medium text-primary hover:underline"
                 >
                   忘记密码？

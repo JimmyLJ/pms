@@ -1,5 +1,5 @@
 import { useState } from "react";
-// import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,34 +11,45 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading] = useState(false);
-  // const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSignUp = async () => {
-    toast.error("测试项目，暂时关闭注册");
-    /*
+    // 基本表单验证
+    if (!name.trim()) {
+      toast.error("请输入您的姓名");
+      return;
+    }
+    if (!email.trim()) {
+      toast.error("请输入邮箱地址");
+      return;
+    }
+    if (password.length < 8) {
+      toast.error("密码至少需要 8 个字符");
+      return;
+    }
+
     setLoading(true);
     const { error } = await authClient.signUp.email({
       email,
       password,
       name,
-      callbackURL: "/",
+      callbackURL: window.location.origin,
     });
     setLoading(false);
     if (error) {
       toast.error(error.message || "注册失败");
     } else {
-      toast.success("账号创建成功！");
-      navigate("/");
+      toast.success("注册成功！请查收验证邮件。");
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
     }
-    */
   };
 
   return (
@@ -89,6 +100,7 @@ export default function SignUpPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="至少 8 个字符"
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

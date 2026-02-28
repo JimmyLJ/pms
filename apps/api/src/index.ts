@@ -44,7 +44,7 @@ app.get('/', (c) => {
   })
 })
 
-const port = 3000
+const port = 3100
 console.log(`Server is running on http://127.0.0.1:${port}`)
 
 serve({
