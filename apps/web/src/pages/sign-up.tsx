@@ -104,6 +104,7 @@ export default function SignUpPage() {
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSignUp()}
               />
             </div>
           </CardContent>

@@ -26,15 +26,12 @@ export default function ForgotPasswordPage() {
     }
 
     setLoading(true);
-    const { error } = await authClient.requestPasswordReset({
+    await authClient.requestPasswordReset({
       email,
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
 
-    if (error) {
-      console.error("requestPasswordReset error:", error);
-    }
     // 无论成功或失败都显示"已发送"，防止邮箱枚举攻击
     setSent(true);
   };

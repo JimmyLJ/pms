@@ -21,6 +21,16 @@ export default function SignInPage() {
   const navigate = useNavigate();
 
   const handleSignIn = async () => {
+    // 表单校验
+    if (!email.trim()) {
+      toast.error("请输入邮箱地址");
+      return;
+    }
+    if (!password) {
+      toast.error("请输入密码");
+      return;
+    }
+
     setLoading(true);
     const { error } = await authClient.signIn.email({
       email,
@@ -28,7 +38,14 @@ export default function SignInPage() {
       callbackURL: "/",
     });
     setLoading(false);
+
     if (error) {
+      // 处理邮箱未验证的情况
+      if (error.status === 403 || error.message?.includes("verify")) {
+        toast.error("请先验证您的邮箱");
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
       toast.error(error.message || "登录失败");
     } else {
       toast.success("登录成功！");
@@ -65,6 +82,7 @@ export default function SignInPage() {
                 id="email"
                 type="email"
                 placeholder="m@example.com"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -82,8 +100,10 @@ export default function SignInPage() {
               <Input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
               />
             </div>
           </CardContent>

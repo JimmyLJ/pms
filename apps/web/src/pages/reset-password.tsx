@@ -39,18 +39,18 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true);
-    try {
-      await authClient.resetPassword({
-        newPassword: password,
-        token,
-      });
+    const { error } = await authClient.resetPassword({
+      newPassword: password,
+      token,
+    });
+    setLoading(false);
+
+    if (error) {
+      toast.error(error.message || "重置失败，链接可能已过期，请重新申请");
+    } else {
       setSuccess(true);
       // 3 秒后自动跳转到登录页
       setTimeout(() => navigate("/sign-in"), 3000);
-    } catch {
-      toast.error("重置失败，链接可能已过期，请重新申请");
-    } finally {
-      setLoading(false);
     }
   };
 
