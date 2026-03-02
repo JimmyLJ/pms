@@ -1,7 +1,6 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
+import { drizzle } from "drizzle-orm/libsql";
+import { createClient } from "@libsql/client";
 import * as dotenv from "dotenv";
-import { sql } from "drizzle-orm";
 import * as schema from "../db/schema";
 
 dotenv.config();
@@ -13,11 +12,11 @@ if (!testDatabaseUrl) {
   throw new Error("TEST_DATABASE_URL or DATABASE_URL must be set");
 }
 
-const pool = new pg.Pool({
-  connectionString: testDatabaseUrl,
+const client = createClient({
+  url: testDatabaseUrl,
 });
 
-export const testDb = drizzle(pool, { schema });
+export const testDb = drizzle(client, { schema });
 
 /**
  * 重置数据库 - 清空所有表数据
@@ -41,5 +40,5 @@ export async function resetDatabase() {
  * 关闭数据库连接
  */
 export async function closeDatabase() {
-  await pool.end();
+  client.close();
 }

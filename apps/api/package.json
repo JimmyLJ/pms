@@ -12,18 +12,17 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
+    "@libsql/client": "^0.17.0",
     "better-auth": "^1.4.10",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.41.0",
     "hono": "^4.6.16",
     "nodemailer": "^8.0.1",
-    "pg": "^8.13.1",
     "zod": "^4.3.5"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
     "@types/nodemailer": "^7.0.11",
-    "@types/pg": "^8.11.10",
     "@vitest/coverage-v8": "^4.0.17",
     "drizzle-kit": "^0.31.4",
     "drizzle-seed": "^0.3.1",
