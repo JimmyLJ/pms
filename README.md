@@ -2,6 +2,10 @@
 
 一个生产级别的全栈项目管理系统，旨在提供高效的团队协作与任务管理体验。本项目采用现代化的前后端分离架构，基于 **pnpm Monorepo** 进行工程化管理，涵盖了从数据库建模、RESTful API 开发、交互式前端界面到全链路自动化测试的完整生命周期。
 
+🌐 **在线演示**: [https://pms.jimmylee.top](https://pms.jimmylee.top)
+
+> 演示账号: `liji420@qq.com` / 密码: `12345678`（也可在登录页一键填入）
+
 ## ✨ 核心特性
 
 - **🚦 沉浸式敏捷工作流**: 支持直观的可视化看板（Kanban），轻松实现任务的创建、分配、拖拽流转与状态追踪。
@@ -20,6 +24,7 @@
 
 - **[pnpm Workspaces](https://pnpm.io/)**: Monorepo 策略，保证代码的高度复用与一致的依赖管理。
 - **[ESLint](https://eslint.org/) / [Prettier](https://prettier.io/)**: 保障代码的极致规范与优雅。
+- **[Docker](https://www.docker.com/)**: 生产环境容器化部署，搭配 Nginx 反向代理。
 
 ### 💻 前端应用 (Web)
 
@@ -36,9 +41,10 @@
 位于 `apps/api` 目录下，构建了一个轻量、极速且类型安全的后端服务。
 
 - **核心框架**: Hono.js + Node.js
-- **ORM 与数据库**: Drizzle ORM + PostgreSQL
+- **ORM 与数据库**: Drizzle ORM + SQLite (via LibSQL)
 - **认证与安全**: Better Auth
 - **数据流验证**: Zod
+- **邮件服务**: Nodemailer + QQ SMTP
 
 ### 🧪 质量保障与测试体系
 
@@ -55,7 +61,7 @@
 ```text
 pms/
 ├── apps/
-│   ├── api/          # 后端服务中心 (Hono + Drizzle + PostgreSQL)
+│   ├── api/          # 后端服务中心 (Hono + Drizzle + SQLite)
 │   │   ├── src/
 │   │   │   ├── db/       # Drizzle schema 与数据库连接
 │   │   │   ├── routes/   # 模块化路由编排 (Users, Projects, Tasks, etc.)
@@ -67,6 +73,7 @@ pms/
 │       │   ├── store/      # 状态池
 │       │   └── lib/        # API Request, Utils
 ├── e2e/              # Playwright 完整的端到端测试用例群
+├── Dockerfile        # 后端生产镜像构建配置
 ├── package.json      # 全局工作区配置与脚本
 └── pnpm-workspace.yaml
 ```
@@ -81,30 +88,27 @@ pms/
 
 - [Node.js](https://nodejs.org/) (推荐 >= 20.x)
 - [pnpm](https://pnpm.io/) (>= 9.x)
-- [PostgreSQL](https://www.postgresql.org/) (本地或云端实例)
 
 ### 2. 克隆与依赖安装
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/JimmyLJ/pms.git
 cd pms
 pnpm install
 ```
 
 ### 3. 环境变量配置
 
-在 `apps/api` 和 `apps/web` 目录下配置相应的环境变量文件：
-
-- 复制 `.env.example` 为 `.env`
-- 完善数据库连接 URI 及相关 Auth 密钥等配置。
+```bash
+cp apps/api/.env.example apps/api/.env
+# 编辑 apps/api/.env，填写数据库路径和邮件 SMTP 配置
+```
 
 ### 4. 数据库初始化
 
 ```bash
-# 运行 Drizzle 数据库同步/迁移
 cd apps/api
-pnpm db:push # 或者使用您项目中相对应的数据库迁移命令
-# 如果有的话，您可以执行您编写好的数据填充脚本（seed）
+pnpm db:push
 ```
 
 ### 5. 一键启动项目

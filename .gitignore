@@ -7,3 +7,12 @@ NEXT_STEPS.md
 design/
 CLAUDE.md
 .claude/
+
+# 数据库文件（不提交数据库到仓库）
+*.db
+*.db-shm
+*.db-wal
+
+# 用户上传的文件
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep

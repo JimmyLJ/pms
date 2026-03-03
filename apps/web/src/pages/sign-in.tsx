@@ -14,6 +14,9 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
+const DEMO_EMAIL = "liji420@qq.com";
+const DEMO_PASSWORD = "12345678";
+
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,6 +70,26 @@ export default function SignInPage() {
       {/* 右侧登录表单 */}
       <div className="flex items-center justify-center relative overflow-hidden bg-[#91d5e4]">
         <Card className="w-full max-w-md border-none shadow-xl bg-white dark:bg-zinc-950 relative z-10 m-8">
+          <div className="mx-6 mt-6 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/40 px-4 py-3">
+            <p className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-1">
+              🎉 演示账号
+            </p>
+            <p className="text-xs text-blue-600 dark:text-blue-500 mb-2">
+              账号: <span className="font-mono font-medium">{DEMO_EMAIL}</span>
+              &nbsp;&nbsp;密码:{" "}
+              <span className="font-mono font-medium">{DEMO_PASSWORD}</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail(DEMO_EMAIL);
+                setPassword(DEMO_PASSWORD);
+              }}
+              className="text-xs font-semibold text-blue-700 dark:text-blue-400 underline underline-offset-2 hover:text-blue-900 dark:hover:text-blue-300 transition-colors cursor-pointer"
+            >
+              一键填入 →
+            </button>
+          </div>
           <CardHeader className="space-y-2">
             <CardTitle className="text-3xl font-bold tracking-tight">
               登录
