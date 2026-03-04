@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
+import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 
@@ -7,9 +8,9 @@ const app = new Hono();
 
 const UPLOAD_DIR = join(process.cwd(), "uploads");
 
-// 确保上传目录存在
+// 确保上传目录存在（同步执行，服务启动时保证目录就绪）
 try {
-  await mkdir(UPLOAD_DIR, { recursive: true });
+  mkdirSync(UPLOAD_DIR, { recursive: true });
 } catch (e) {
   // 如果已存在则忽略
 }
@@ -33,9 +34,9 @@ app.post("/", async (c) => {
 
   await writeFile(filePath, buffer);
 
-  // 构建 URL - 假设 API 运行在 localhost:3000
-  // 并且我们将静态文件挂载在 /uploads
-  const url = `http://localhost:3100/uploads/${fileName}`;
+  // 构建 URL，使用 BETTER_AUTH_URL 环境变量作为基础地址
+  const baseUrl = process.env.BETTER_AUTH_URL || "http://localhost:3100";
+  const url = `${baseUrl}/uploads/${fileName}`;
 
   return c.json({ url });
 });

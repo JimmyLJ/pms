@@ -1,58 +1,61 @@
-import { Hono } from 'hono'
-import { serveStatic } from '@hono/node-server/serve-static'
-import { serve } from '@hono/node-server'
-import { auth } from "./lib/auth"
-import projectsRouter from "./routes/projects"
-import tasksRouter from "./routes/tasks"
-import analyticsRouter from "./routes/analytics"
-import searchRouter from "./routes/search"
-import uploadsRouter from "./routes/uploads"
-import organizationsRouter from "./routes/organizations"
-import usersRouter from "./routes/users"
+import { Hono } from "hono";
+import { serveStatic } from "@hono/node-server/serve-static";
+import { serve } from "@hono/node-server";
+import { auth } from "./lib/auth";
+import projectsRouter from "./routes/projects";
+import tasksRouter from "./routes/tasks";
+import analyticsRouter from "./routes/analytics";
+import searchRouter from "./routes/search";
+import uploadsRouter from "./routes/uploads";
+import organizationsRouter from "./routes/organizations";
+import usersRouter from "./routes/users";
 
-import { cors } from 'hono/cors'
+import { cors } from "hono/cors";
 
-const app = new Hono()
+const app = new Hono();
 
 const allowedOrigins = process.env.CLIENT_ORIGIN
-  ? process.env.CLIENT_ORIGIN.split(',').map((o) => o.trim())
-  : ['http://localhost:5173', 'http://127.0.0.1:5173']
+  ? process.env.CLIENT_ORIGIN.split(",").map((o) => o.trim())
+  : ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 app.use(
-  '/api/*',
+  "/api/*",
   cors({
     origin: allowedOrigins,
     credentials: true,
-  })
-)
+  }),
+);
 
 // 从 uploads 目录提供静态文件服务
-app.use('/uploads/*', serveStatic({
-  root: './uploads',
-  rewriteRequestPath: (path) => path.replace(/^\/uploads/, ''),
-}))
+app.use(
+  "/uploads/*",
+  serveStatic({
+    root: "./uploads",
+    rewriteRequestPath: (path) => path.replace(/^\/uploads/, ""),
+  }),
+);
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
-app.route("/api/projects", projectsRouter)
-app.route("/api/tasks", tasksRouter)
-app.route("/api/analytics", analyticsRouter)
-app.route("/api/search", searchRouter)
-app.route("/api/uploads", uploadsRouter)
-app.route("/api/organizations", organizationsRouter)
-app.route("/api/users", usersRouter)
+app.route("/api/projects", projectsRouter);
+app.route("/api/tasks", tasksRouter);
+app.route("/api/analytics", analyticsRouter);
+app.route("/api/search", searchRouter);
+app.route("/api/uploads", uploadsRouter);
+app.route("/api/organizations", organizationsRouter);
+app.route("/api/users", usersRouter);
 
-app.get('/', (c) => {
+app.get("/", (c) => {
   return c.json({
-    message: 'Hello from Hono API'
-  })
-})
+    message: "Hello from Hono API",
+  });
+});
 
-const port = 3100
-console.log(`Server is running on http://127.0.0.1:${port}`)
+const port = 3100;
+console.log(`Server is running on http://127.0.0.1:${port}`);
 
 serve({
   fetch: app.fetch,
   port,
-  hostname: '127.0.0.1'
-})
+  hostname: "0.0.0.0",
+});

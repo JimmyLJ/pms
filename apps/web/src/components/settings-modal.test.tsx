@@ -47,7 +47,7 @@ vi.mock("@/lib/api-client", () => ({
 
 // Mock ImageUpload
 vi.mock("@/components/image-upload", () => ({
-  ImageUpload: ({ value, onChange }: any) => (
+  ImageUpload: ({ onChange }: any) => (
     <button onClick={() => onChange("https://example.com/avatar.jpg")}>
       上传头像
     </button>
