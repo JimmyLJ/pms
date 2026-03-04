@@ -14,7 +14,7 @@ export function ImageUpload({
   value,
   onChange,
   className,
-  endpoint = "http://localhost:3100/api/uploads",
+  endpoint = "/api/uploads",
 }: ImageUploadProps) {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
